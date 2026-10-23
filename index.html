@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Element Simyacısı - Bilim & Teknoloji Sentezi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: 'Inter', sans-serif;
+      touch-action: none;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Tuval Arka Plan Izgarası */
+    .alchemy-canvas-bg {
+      background-color: #090d16;
+      background-image:
+        radial-gradient(circle at 50% 45%, rgba(6, 182, 212, 0.08) 0%, transparent 65%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    /* Element Kartı Animasyonları ve Stilleri */
+    .element-card {
+      transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.12s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      will-change: left, top, transform;
+      touch-action: none;
+    }
+    .element-card.merge-target {
+      transform: translate(-50%, -50%) scale(1.12) !important;
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.85), inset 0 0 12px rgba(34, 211, 238, 0.4) !important;
+      border-color: #22d3ee !important;
+      z-index: 60 !important;
+    }
+    .element-card.spawn-pop {
+      animation: popInCard 0.32s cubic-bezier(0.18, 1.25, 0.4, 1) forwards;
+    }
+    @keyframes popInCard {
+      0% { transform: translate(-50%, -50%) scale(0.25); opacity: 0; }
+      75% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    /* Ekran Sarsıntısı (Patlama Efektleri İçin) */
+    @keyframes canvasShake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-6px, 5px); }
+      40% { transform: translate(6px, -5px); }
+      60% { transform: translate(-4px, -3px); }
+      80% { transform: translate(4px, 4px); }
+    }
+    .shake-screen {
+      animation: canvasShake 0.35s ease-in-out;
+    }
+
+    /* Sentez Duman/Bulut Animasyonu */
+    @keyframes puffPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.95); }
+      50% { transform: translate(-50%, -50%) scale(1.08); }
+    }
+    .synthesis-puff {
+      animation: puffPulse 0.9s infinite ease-in-out;
+    }
+
+    /* Özel Kaydırma Çubuğu */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.6);
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden select-none">
+
+  <!-- 1. ÜST BAR (BAŞLIK, SAYAÇLAR VE GENEL AYARLAR) -->
+  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-2.5 sm:px-4 py-2 flex items-center justify-between gap-2 z-30 shrink-0">
+    <!-- Sol: Logo ve Başlık -->
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+        <span class="text-base sm:text-lg">⚗️</span>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-xs sm:text-base font-extrabold tracking-tight text-white truncate">Element Simyacısı</h1>
+        <p class="text-[10px] text-slate-400 hidden sm:block truncate">Atomlardan Teknolojiye Sentez Laboratuvarı</p>
+      </div>
+    </div>
+
+    <!-- Orta: Canlı Sistem Üretimi & Keşif Sayaçları -->
+    <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+      <div class="px-2 sm:px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5" title="Sistemdeki ve Buluttaki Toplam Formül Sayısı">
+        <span class="text-xs sm:text-sm">🌐</span>
+        <div class="flex flex-col leading-none">
+          <span class="text-[9px] uppercase tracking-wider text-amber-300/80 font-semibold hidden md:inline">Sistem Üretimi</span>
+          <span id="globalFormulaCount" class="text-xs sm:text-sm font-extrabold font-mono-code text-amber-400">235+</span>
+        </div>
+      </div>
+
+      <div class="px-2 sm:px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-1.5" title="Senin Keşfettiğin Elementler">
+        <span class="text-xs sm:text-sm">🧪</span>
+        <div class="flex flex-col leading-none">
+          <span class="text-[9px] uppercase tracking-wider text-cyan-300/80 font-semibold hidden md:inline">Keşfim</span>
+          <span id="discoveredCountBadge" class="text-xs sm:text-sm font-extrabold font-mono-code text-cyan-400">14</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+      <button id="deviceModeBtn" onclick="toggleDeviceMode()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Bilgisayar / Telefon Görünümü Değiştir">
+        <span id="deviceModeIcon">💻</span>
+        <span id="deviceModeLabel" class="hidden sm:inline">PC</span>
+      </button>
+
+      <button id="soundToggleBtn" onclick="toggleSound()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition" title="Ses Efektlerini Aç/Kapat">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <button onclick="openSettingsModal()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Firebase Bulut & API Ayarları">
+        <span>☁️</span>
+        <span class="hidden lg:inline">Kataloğu Eşitle</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="w-full bg-slate-900/80 border-b border-slate-800/80 px-2.5 sm:px-4 py-1.5 flex items-center justify-between gap-2 z-20 shrink-0 overflow-x-auto">
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <button onclick="openElementPickerModal()" class="px-3 sm:px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-cyan-500/20 active:scale-95 transition">
+        <span class="text-sm sm:text-base">➕</span>
+        <span>Element Ekle</span>
+      </button>
+
+      <button onclick="spawnRandomPair()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
+        <span>🎲</span>
+        <span>Rastgele 2</span>
+      </button>
+
+      <button onclick="showRecipeHint()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
+        <span>💡</span>
+        <span>İpucu</span>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <span id="canvasItemCountText" class="text-[11px] text-slate-400 hidden md:inline">Tuvalde: 0 öğe</span>
+      <button onclick="clearCanvas()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-1 active:scale-95 transition" title="Tuvaldeki Tüm Elementleri Temizle">
+        <span>🧹</span>
+        <span>Tuvali Temizle</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 flex relative overflow-hidden w-full h-full">
+    <main id="alchemyCanvas" class="flex-1 relative alchemy-canvas-bg overflow-hidden w-full h-full">
+      <div id="canvasEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6 text-center transition-opacity duration-300">
+        <div class="w-16 h-16 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-3xl mb-3 shadow-inner">
+          🧪
+        </div>
+        <p class="text-slate-300 font-bold text-sm sm:text-base max-w-md">
+          Yukarıdaki <span class="text-cyan-400">"➕ Element Ekle"</span> butonuna bas veya sağdaki listeden elementleri sürükleyip üst üste bırak!
+        </p>
+        <p class="text-slate-500 text-xs mt-1.5 max-w-sm">
+          İpucu: Her elementin altında onu oluşturan <span class="text-cyan-400/80 font-mono-code">formül / bileşenler</span> yazar. Çift tıklayarak çoğaltabilirsin.
+        </p>
+      </div>
+
+      <div id="canvasFxLayer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>
+      <div id="canvasItemsLayer" class="absolute inset-0 z-10 overflow-hidden"></div>
+      <div id="toastContainer" class="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-none w-11/12 max-w-md"></div>
+
+      <div id="trashDropZone" class="absolute bottom-3 left-3 z-30 px-3.5 py-2.5 rounded-2xl bg-slate-900/90 border-2 border-slate-700/80 text-slate-400 flex items-center gap-2 shadow-xl transition-all duration-150">
+        <span class="text-lg">🗑️</span>
+        <div class="flex flex-col leading-tight">
+          <span class="text-xs font-bold text-slate-300">Silmek İçin Bırak</span>
+          <span class="text-[10px] text-slate-500 hidden sm:inline">Çift tıkla = Çoğalt</span>
+        </div>
+      </div>
+
+      <button id="mobileQuickAddBtn" onclick="openElementPickerModal()" class="md:hidden absolute bottom-3 right-3 z-30 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-extrabold text-xs shadow-xl shadow-cyan-500/30 flex items-center gap-1.5 active:scale-95 transition">
+        <span class="text-base">🧪</span>
+        <span>Envanter (<span id="mobileInvCount">14</span>)</span>
+      </button>
+    </main>
+
+    <aside id="sidebarPanel" class="w-72 lg:w-80 bg-slate-900/95 border-l border-slate-800 flex flex-col z-20 shrink-0 hidden md:flex">
+      <div class="p-3 border-b border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Element Kütüphanesi</span>
+          <span class="text-[11px] font-mono-code text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-lg" id="sidebarCountText">14 Öğe</span>
+        </div>
+
+        <div class="relative">
+          <input
+            id="sidebarSearchInput"
+            type="text"
+            placeholder="Element veya formül ara..."
+            oninput="renderInventory()"
+            class="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-100 placeholder-slate-500 outline-none transition"
+          />
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+          <button onclick="clearSidebarSearch()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs">✕</button>
+        </div>
+
+        <div class="flex items-center gap-1 overflow-x-auto pb-1">
+          <button onclick="setCategoryFilter('all')" data-cat="all" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500 text-slate-950 shrink-0 transition">Tümü</button>
+          <button onclick="setCategoryFilter('element')" data-cat="element" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition">Atom</button>
+          <button onclick="setCategoryFilter('madde')" data-cat="madde" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition">Madde</button>
+          <button onclick="setCategoryFilter('elektronik')" data-cat="elektronik" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition">Teknoloji</button>
+          <button onclick="setCategoryFilter('enerji')" data-cat="enerji" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition">Enerji</button>
+        </div>
+      </div>
+
+      <div id="sidebarInventoryList" class="flex-1 overflow-y-auto p-2.5 grid grid-cols-1 gap-1.5 content-start"></div>
+    </aside>
+  </div>
+
+  <div id="pickerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">➕</span>
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-white">Tuvale Element Ekle</h2>
+            <p class="text-[11px] text-slate-400">Bir elemente dokunduğunda doğrudan tuvalin ortasına eklenir.</p>
+          </div>
+        </div>
+        <button onclick="closeElementPickerModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="p-3 border-b border-slate-800 bg-slate-950/50">
+        <input
+          id="pickerSearchInput"
+          type="text"
+          placeholder="Element adı veya altındaki formülü ara..."
+          oninput="renderPickerItems()"
+          class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-500 outline-none"
+        />
+      </div>
+
+      <div id="pickerGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 content-start"></div>
+
+      <div class="px-4 py-2.5 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
+        <span>Her öğenin altında kimyasal formülü veya üretim tarifi yer alır.</span>
+        <button onclick="closeElementPickerModal()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deviceModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
+      <div class="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-3xl mx-auto mb-3">
+        ⚗️
+      </div>
+      <h2 class="text-lg sm:text-xl font-extrabold text-white mb-1">Element Simyacısına Hoş Geldin!</h2>
+      <p class="text-xs sm:text-sm text-slate-400 mb-5">
+        Tuşların ve tuvalin ekranına tam oturması için şu an hangi cihazdan oynadığını seç:
+      </p>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="selectDeviceMode('pc')" class="p-4 rounded-2xl bg-slate-800/90 hover:bg-cyan-950/60 border-2 border-slate-700 hover:border-cyan-400 flex flex-col items-center gap-2 transition group">
+          <span class="text-3xl group-hover:scale-110 transition">💻</span>
+          <span class="font-extrabold text-sm text-white">Bilgisayar</span>
+          <span class="text-[11px] text-slate-400">Geniş Ekran & Sağ Kütüphane</span>
+        </button>
+        <button onclick="selectDeviceMode('mobile')" class="p-4 rounded-2xl bg-slate-800/90 hover:bg-cyan-950/60 border-2 border-slate-700 hover:border-cyan-400 flex flex-col items-center gap-2 transition group">
+          <span class="text-3xl group-hover:scale-110 transition">📱</span>
+          <span class="font-extrabold text-sm text-white">Telefon / Tablet</span>
+          <span class="text-[11px] text-slate-400">Tam Ekran Dokunmatik Mod</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">☁️</span>
+          <h3 class="text-base font-extrabold text-white">Bulut Katalog & Sistem Ayarları</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-200 space-y-2">
+          <div class="font-bold text-sm flex items-center gap-1.5">
+            <span>🚀</span>
+            <span>235+ Hazır Formülü Firebase'e Yükle</span>
+          </div>
+          <p class="text-indigo-200/80 leading-relaxed">
+            Yerleşik tüm bilimsel ve teknolojik tarifleri (formülleriyle birlikte) tek tıkla kendi Firebase Realtime Database adresine aktarabilirsin.
+          </p>
+          <button id="syncFirebaseBtn" onclick="syncAllLocalRecipesToFirebase()" class="w-full py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-extrabold transition shadow">
+            ☁️ Tüm Kataloğu Şimdi Firebase'e Aktar
+          </button>
+          <div id="syncStatusText" class="text-[11px] font-mono-code text-cyan-300"></div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Firebase Realtime DB URL</label>
+          <input id="cfgFirebaseUrl" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Google Gemini API Anahtarı (Yeni Keşifler İçin)</label>
+          <input id="cfgGeminiKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800 gap-2">
+          <button onclick="resetAllProgress()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold">
+            🗑️ İlerlemeyi Sıfırla
+          </button>
+          <button onclick="saveSettingsFromModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold">
+            Kaydet ve Kapat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
+    const DEFAULT_GEMINI_KEY = "AIzaSyDdlKNwxzVBBQmpsg0YsYTLhHM--PSi6VY";
+
+    const STARTER_ELEMENTS = [
+      { name: "Hidrojen", emoji: "💧", cat: "element", formula: "H • Atom No: 1", desc: "Evrenin en hafif ve en bol elementi" },
+      { name: "Oksijen", emoji: "💨", cat: "element", formula: "O₂ • Atom No: 8", desc: "Yaşam ve yanma için temel gaz" },
+      { name: "Karbon", emoji: "⚫", cat: "element", formula: "C • Atom No: 6", desc: "Organik yaşamın ve kimyanın temeli" },
+      { name: "Demir", emoji: "🧲", cat: "element", formula: "Fe • Atom No: 26", desc: "Sanayi ve inşaatın temel metali" },
+      { name: "Bakır", emoji: "🥉", cat: "element", formula: "Cu • Atom No: 29", desc: "Yüksek elektrik iletkenli metal" },
+      { name: "Silisyum", emoji: "💠", cat: "element", formula: "Si • Atom No: 14", desc: "Yarı iletken çiplerin ve camın kalbi" },
+      { name: "Altın", emoji: "🪙", cat: "element", formula: "Au • Atom No: 79", desc: "Paslanmaz asil ve üstün iletken metal" },
+      { name: "Lityum", emoji: "🔋", cat: "element", formula: "Li • Atom No: 3", desc: "Modern bataryaların hafif alkali metali" },
+      { name: "Uranyum", emoji: "☢️", cat: "element", formula: "U • Atom No: 92", desc: "Nükleer enerji sağlayan ağır atom" },
+      { name: "Azot", emoji: "🌱", cat: "element", formula: "N₂ • Atom No: 7", desc: "Atmosferin %78'ini oluşturan gaz" },
+      { name: "Ateş", emoji: "🔥", cat: "enerji", formula: "Isı + Plazma", desc: "Yüksek sıcaklık ve yanma enerjisi" },
+      { name: "Zaman", emoji: "⏳", cat: "madde", formula: "t • 4. Boyut", desc: "Maddeyi evrimleştiren süreklilik" },
+      { name: "Elektrik", emoji: "⚡", cat: "enerji", formula: "e⁻ • Elektron Akışı", desc: "Serbest elektronların hareketi" },
+      { name: "Işık", emoji: "💡", cat: "enerji", formula: "hν • Foton Dalgası", desc: "Elektromanyetik ışıma ve fotonlar" }
+    ];
+
+    const MASTER_RECIPES = {
+      "hidrojen_hidrojen": { name: "Helyum (He)", emoji: "🎈", cat: "element", formula: "Hidrojen + Hidrojen (Füzyon)" },
+      "helyum (he)_helyum (he)": { name: "Yıldız Çekirdeği", emoji: "🌟", cat: "enerji", formula: "Helyum + Helyum" },
+      "oksijen_oksijen": { name: "Ozon (O₃)", emoji: "🛡️", cat: "madde", formula: "Oksijen + Oksijen" },
+      "karbon_karbon": { name: "Grafit", emoji: "✏️", cat: "madde", formula: "Karbon + Karbon" },
+      "grafit_ateş": { name: "Elmas", emoji: "💎", cat: "madde", formula: "Grafit + Ateş" },
+      "karbon_ateş": { name: "Kömür", emoji: "🪨", cat: "madde", formula: "Karbon + Ateş" },
+      "kömür_kömür": { name: "Elmas", emoji: "💎", cat: "madde", formula: "Kömür + Kömür (Yüksek Basınç)" },
+      "ateş_ateş": { name: "Plazma", emoji: "☄️", cat: "enerji", formula: "Ateş + Ateş" },
+      "elektrik_elektrik": { name: "Yıldırım", emoji: "🌩️", cat: "enerji", formula: "Elektrik + Elektrik" },
+      "ışık_ışık": { name: "Lazer", emoji: "🔦", cat: "enerji", formula: "Işık + Işık" },
+      "hidrojen_oksijen": { name: "Su (H₂O)", emoji: "🌊", cat: "madde", formula: "Hidrojen + Oksijen" },
+      "su (h₂o)_su (h₂o)": { name: "Okyanus", emoji: "🌏", cat: "madde", formula: "Su + Su" },
+      "su (h₂o)_ateş": { name: "Buhar", emoji: "♨️", cat: "madde", formula: "Su + Ateş" },
+      "su (h₂o)_elektrik": { name: "Elektroliz", emoji: "🫧", cat: "enerji", formula: "Su + Elektrik" },
+      "oksijen_azot": { name: "Hava", emoji: "🌬️", cat: "madde", formula: "Oksijen + Azot" },
+      "hava_hava": { name: "Rüzgar", emoji: "🌪️", cat: "enerji", formula: "Hava + Hava" },
+      "rüzgar_su (h₂o)": { name: "Bulut", emoji: "☁️", cat: "madde", formula: "Rüzgar + Su" },
+      "bulut_elektrik": { name: "Fırtına", emoji: "⛈️", cat: "enerji", formula: "Bulut + Elektrik" },
+      "karbon_oksijen": { name: "Karbondioksit (CO₂)", emoji: "🫧", cat: "madde", formula: "Karbon + Oksijen" },
+      "karbon_hidrojen": { name: "Metan Gazı (CH₄)", emoji: "⛽", cat: "madde", formula: "Karbon + Hidrojen" },
+      "metan gazı (ch₄)_oksijen": { name: "Alev Patlaması", emoji: "💥", cat: "enerji", formula: "Metan Gazı + Oksijen" },
+      "azot_hidrojen": { name: "Amonyak (NH₃)", emoji: "🧪", cat: "madde", formula: "Azot + Hidrojen" },
+      "amonyak (nh₃)_oksijen": { name: "Nitrik Asit", emoji: "⚗️", cat: "madde", formula: "Amonyak + Oksijen" },
+      "demir_karbon": { name: "Çelik", emoji: "⚔️", cat: "madde", formula: "Demir + Karbon" },
+      "demir_oksijen": { name: "Pas (Demir Oksit)", emoji: "🧱", cat: "madde", formula: "Demir + Oksijen" },
+      "demir_ateş": { name: "Erimiş Metal", emoji: "🌋", cat: "madde", formula: "Demir + Ateş" },
+      "çelik_çelik": { name: "Zırhlı Kasa", emoji: "🛡️", cat: "madde", formula: "Çelik + Çelik" },
+      "silisyum_oksijen": { name: "Kum (Silika)", emoji: "🏖️", cat: "madde", formula: "Silisyum + Oksijen" },
+      "kum (silika)_ateş": { name: "Cam", emoji: "🪟", cat: "madde", formula: "Kum (Silika) + Ateş" },
+      "cam_ışık": { name: "Mercek", emoji: "🔍", cat: "madde", formula: "Cam + Işık" },
+      "mercek_ışık": { name: "Fiber Optik", emoji: "🌐", cat: "elektronik", formula: "Mercek + Işık" },
+      "cam_elektrik": { name: "Ampul", emoji: "💡", cat: "elektronik", formula: "Cam + Elektrik" },
+      "kum (silika)_su (h₂o)": { name: "Kil", emoji: "🏺", cat: "madde", formula: "Kum + Su" },
+      "kil_ateş": { name: "Seramik", emoji: "🧱", cat: "madde", formula: "Kil + Ateş" },
+      "bakır_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır + Elektrik" },
+      "bakır_ateş": { name: "Bakır Tel", emoji: "➰", cat: "madde", formula: "Bakır + Ateş" },
+      "bakır tel_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır Tel + Elektrik" },
+      "kablo_demir": { name: "Elektromıknatıs", emoji: "🧲", cat: "elektronik", formula: "Kablo + Demir" },
+      "elektromıknatıs_elektrik": { name: "Elektrik Motoru", emoji: "⚙️", cat: "elektronik", formula: "Elektromıknatıs + Elektrik" },
+      "lityum_elektrik": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Elektrik" },
+      "lityum_karbon": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Karbon" },
+      "batarya_batarya": { name: "Güç İstasyonu", emoji: "⚡", cat: "enerji", formula: "Batarya + Batarya" },
+      "silisyum_elektrik": { name: "Transistör", emoji: "🎛️", cat: "elektronik", formula: "Silisyum + Elektrik" },
+      "silisyum_ateş": { name: "Silikon Plaka", emoji: "💿", cat: "elektronik", formula: "Silisyum + Ateş" },
+      "transistör_transistör": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Transistör + Transistör" },
+      "transistör_kablo": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Transistör + Kablo" },
+      "silisyum_altın": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Silisyum + Altın" },
+      "mikroçip_mikroçip": { name: "İşlemci (CPU)", emoji: "🧠", cat: "elektronik", formula: "Mikroçip + Mikroçip" },
+      "mikroçip_altın": { name: "İşlemci (CPU)", emoji: "🧠", cat: "elektronik", formula: "Mikroçip + Altın" },
+      "mikroçip_kablo": { name: "Anakart", emoji: "🟩", cat: "elektronik", formula: "Mikroçip + Kablo" },
+      "işlemci (cpu)_anakart": { name: "Bilgisayar", emoji: "💻", cat: "elektronik", formula: "İşlemci (CPU) + Anakart" },
+      "işlemci (cpu)_ışık": { name: "Ekran Kartı (GPU)", emoji: "🎮", cat: "elektronik", formula: "İşlemci (CPU) + Işık" },
+      "cam_ışık": { name: "Ekran Paneli", emoji: "🖥️", cat: "elektronik", formula: "Cam + Işık" },
+      "cam_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Cam + Mikroçip" },
+      "ekran paneli_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Ekran Paneli + Mikroçip" },
+      "dokunmatik ekran_batarya": { name: "Akıllı Telefon", emoji: "📱", cat: "elektronik", formula: "Dokunmatik Ekran + Batarya" },
+      "dokunmatik ekran_işlemci (cpu)": { name: "Akıllı Telefon", emoji: "📱", cat: "elektronik", formula: "Dokunmatik Ekran + İşlemci (CPU)" },
+      "akıllı telefon_akıllı telefon": { name: "Tablet", emoji: "📟", cat: "elektronik", formula: "Akıllı Telefon + Akıllı Telefon" },
+      "akıllı telefon_dokunmatik ekran": { name: "Tablet", emoji: "📟", cat: "elektronik", formula: "Akıllı Telefon + Dokunmatik Ekran" },
+      "tablet_işlemci (cpu)": { name: "Dizüstü Bilgisayar", emoji: "💻", cat: "elektronik", formula: "Tablet + İşlemci (CPU)" },
+      "akıllı telefon_zaman": { name: "Akıllı Saat", emoji: "⌚", cat: "elektronik", formula: "Akıllı Telefon + Zaman" },
+      "işlemci (cpu)_elektrik": { name: "Yazılım Kodu", emoji: "👨‍💻", cat: "elektronik", formula: "İşlemci (CPU) + Elektrik" },
+      "bilgisayar_bilgisayar": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Bilgisayar" },
+      "bilgisayar_fiber optik": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Fiber Optik" },
+      "internet_yazılım kodu": { name: "Bulut Sunucu", emoji: "☁️", cat: "elektronik", formula: "İnternet + Yazılım Kodu" },
+      "yazılım kodu_işlemci (cpu)": { name: "Yapay Zekâ (AI)", emoji: "🤖", cat: "elektronik", formula: "Yazılım Kodu + İşlemci (CPU)" },
+      "internet_işlemci (cpu)": { name: "Yapay Zekâ (AI)", emoji: "🤖", cat: "elektronik", formula: "İnternet + İşlemci (CPU)" },
+      "yapay zekâ (ai)_çelik": { name: "Robot", emoji: "🦾", cat: "elektronik", formula: "Yapay Zekâ (AI) + Çelik" },
+      "yapay zekâ (ai)_elektrik motoru": { name: "Robot", emoji: "🦾", cat: "elektronik", formula: "Yapay Zekâ (AI) + Elektrik Motoru" },
+      "robot_yapay zekâ (ai)": { name: "İnsansı Robot (Android)", emoji: "🦿", cat: "elektronik", formula: "Robot + Yapay Zekâ (AI)" },
+      "bilgisayar_lazer": { name: "Kuantum Bilgisayar", emoji: "⚛️", cat: "elektronik", formula: "Bilgisayar + Lazer" },
+      "uranyum_uranyum": { name: "Kritik Kütle", emoji: "☢️", cat: "enerji", formula: "Uranyum + Uranyum" },
+      "kritik kütle_kritik kütle": { name: "Nükleer Patlama", emoji: "🍄", cat: "enerji", formula: "Kritik Kütle + Kritik Kütle" },
+      "uranyum_su (h₂o)": { name: "Nükleer Reaktör", emoji: "🏭", cat: "enerji", formula: "Uranyum + Su" },
+      "uranyum_elektrik": { name: "Nükleer Enerji", emoji: "⚡", cat: "enerji", formula: "Uranyum + Elektrik" },
+      "çelik_ateş": { name: "Roket Motoru", emoji: "🚀", cat: "elektronik", formula: "Çelik + Ateş" },
+      "roket motoru_bilgisayar": { name: "Uzay Gemisi", emoji: "🛸", cat: "elektronik", formula: "Roket Motoru + Bilgisayar" },
+      "uzay gemisi_güneş": { name: "Uzay İstasyonu", emoji: "🛰️", cat: "elektronik", formula: "Uzay Gemisi + Güneş" },
+      "ışık_silisyum": { name: "Güneş Paneli", emoji: "☀️", cat: "enerji", formula: "Işık + Silisyum" },
+      "su (h₂o)_karbon": { name: "Organik Molekül", emoji: "🧬", cat: "madde", formula: "Su + Karbon" },
+      "organik molekül_elektrik": { name: "Hücre", emoji: "🦠", cat: "madde", formula: "Organik Molekül + Elektrik" },
+      "organik molekül_zaman": { name: "Yaşam", emoji: "🌱", cat: "madde", formula: "Organik Molekül + Zaman" },
+      "yaşam_su (h₂o)": { name: "Yosun", emoji: "🌿", cat: "madde", formula: "Yaşam + Su" },
+      "yaşam_ışık": { name: "Bitki", emoji: "🪴", cat: "madde", formula: "Yaşam + Işık" },
+      "bitki_zaman": { name: "Ağaç", emoji: "🌳", cat: "madde", formula: "Bitki + Zaman" },
+      "ağaç_ateş": { name: "Kül", emoji: "⚱️", cat: "madde", formula: "Ağaç + Ateş" },
+      "hücre_zaman": { name: "İnsan", emoji: "🧑", cat: "madde", formula: "Hücre + Zaman" },
+      "insan_bilgisayar": { name: "Siborg (Cyborg)", emoji: "🦾", cat: "elektronik", formula: "İnsan + Bilgisayar" }
+    };
+
+    const NORMALIZED_RECIPES = {};
+    const REACTION_CACHE = {};
+    const ELEMENT_FORMULA_MAP = {};
+
+    function formatTitleCase(str) {
+      return (str || "")
+        .split(" ")
+        .map(w => w ? w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1) : "")
+        .join(" ");
+    }
+
+    function normalizeKey(a, b) {
+      const clean = (s) => (s || "")
+        .toLocaleLowerCase("tr-TR")
+        .replace(/\([^)]*\)/g, "")
+        .replace(/[.#$[\]/()]/g, "")
+        .trim()
+        .replace(/\s+/g, " ");
+      return [clean(a), clean(b)].sort().join("_");
+    }
+
+    function prepareMasterRecipes() {
+      STARTER_ELEMENTS.forEach(s => {
+        ELEMENT_FORMULA_MAP[s.name.toLocaleLowerCase("tr-TR")] = s.formula;
+      });
+
+      for (const [rawKey, val] of Object.entries(MASTER_RECIPES)) {
+        const parts = rawKey.split("_");
+        if (parts.length === 2) {
+          const p1 = formatTitleCase(parts[0]);
+          const p2 = formatTitleCase(parts[1]);
+          if (!val.formula) {
+            val.formula = `${p1} + ${p2}`;
+          }
+          const normKey = normalizeKey(parts[0], parts[1]);
+          NORMALIZED_RECIPES[normKey] = val;
+          const exactKey = [parts[0].trim().toLocaleLowerCase("tr-TR"), parts[1].trim().toLocaleLowerCase("tr-TR")].sort().join("_");
+          NORMALIZED_RECIPES[exactKey] = val;
+        }
+        if (val.name && val.formula) {
+          ELEMENT_FORMULA_MAP[val.name.toLocaleLowerCase("tr-TR")] = val.formula;
+        }
+      }
+    }
+
+    function getElementFormulaText(item) {
+      if (!item) return "Temel Madde";
+      if (item.formula && item.formula.trim() !== "") return item.formula;
+      const lower = (item.name || "").toLocaleLowerCase("tr-TR");
+      if (ELEMENT_FORMULA_MAP[lower]) return ELEMENT_FORMULA_MAP[lower];
+      if (item.desc) return item.desc;
+      return "Temel Element";
+    }
+
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === "spawn") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(580, now + 0.09);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        } else if (type === "success") {
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554.37, now + 0.07);
+          osc.frequency.setValueAtTime(659.25, now + 0.14);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+          osc.start(now);
+          osc.stop(now + 0.32);
+        } else if (type === "explosion") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+          osc.start(now);
+          osc.stop(now + 0.36);
+        } else if (type === "fail" || type === "trash") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
+    }
+
+    function getElementVisualProfile(item) {
+      const name = (item.name || "").toLocaleLowerCase("tr-TR");
+      const cat = item.cat || "madde";
+
+      if (name.includes("patlama") || name.includes("ateş") || name.includes("alev") || name.includes("plazma") || name.includes("erimiş") || name.includes("roket")) {
+        return {
+          theme: "fire",
+          cardBorder: "border-orange-500/80",
+          cardBg: "bg-gradient-to-br from-orange-950/90 to-slate-900/95",
+          formulaColor: "text-orange-300",
+          colors: ["#f97316", "#ef4444", "#facc15"]
+        };
+      }
+      if (name.includes("su") || name.includes("okyanus") || name.includes("hidrojen") || name.includes("buhar") || name.includes("bulut")) {
+        return {
+          theme: "water",
+          cardBorder: "border-sky-400/80",
+          cardBg: "bg-gradient-to-br from-sky-950/90 to-slate-900/95",
+          formulaColor: "text-sky-300",
+          colors: ["#38bdf8", "#0284c7", "#bae6fd"]
+        };
+      }
+      if (name.includes("uranyum") || name.includes("nükleer") || name.includes("kritik") || name.includes("asit")) {
+        return {
+          theme: "radioactive",
+          cardBorder: "border-lime-400/80",
+          cardBg: "bg-gradient-to-br from-lime-950/90 to-slate-900/95",
+          formulaColor: "text-lime-300",
+          colors: ["#a3e635", "#22c55e", "#bef264"]
+        };
+      }
+      if (cat === "elektronik" || name.includes("elektrik") || name.includes("çip") || name.includes("telefon") || name.includes("bilgisayar") || name.includes("yapay zekâ")) {
+        return {
+          theme: "electric",
+          cardBorder: "border-cyan-400/80",
+          cardBg: "bg-gradient-to-br from-cyan-950/90 to-slate-900/95",
+          formulaColor: "text-cyan-300",
+          colors: ["#22d3ee", "#3b82f6", "#fde047"]
+        };
+      }
+      if (name.includes("yaşam") || name.includes("bitki") || name.includes("ağaç") || name.includes("hücre") || name.includes("organik")) {
+        return {
+          theme: "nature",
+          cardBorder: "border-emerald-400/80",
+          cardBg: "bg-gradient-to-br from-emerald-950/90 to-slate-900/95",
+          formulaColor: "text-emerald-300",
+          colors: ["#34d399", "#10b981", "#a7f3d0"]
+        };
+      }
+      return {
+        theme: "matter",
+        cardBorder: "border-slate-600/90",
+        cardBg: "bg-slate-800/95",
+        formulaColor: "text-cyan-300/90",
+        colors: ["#38bdf8", "#a855f7", "#f8fafc"]
+      };
+    }
+
+    function triggerVfxBurst(x, y, profile) {
+      const fxLayer = document.getElementById("canvasFxLayer");
+      if (!fxLayer) return;
+
+      const ring = document.createElement("div");
+      ring.style.position = "absolute";
+      ring.style.left = `${x}px`;
+      ring.style.top = `${y}px`;
+      ring.style.width = "16px";
+      ring.style.height = "16px";
+      ring.style.borderRadius = "9999px";
+      ring.style.border = `3px solid ${profile.colors[0]}`;
+      ring.style.transform = "translate(-50%, -50%) scale(1)";
+      ring.style.opacity = "0.95";
+      ring.style.transition = "transform 0.45s ease-out, opacity 0.45s ease-out";
+      fxLayer.appendChild(ring);
+
+      requestAnimationFrame(() => {
+        ring.style.transform = "translate(-50%, -50%) scale(7.5)";
+        ring.style.opacity = "0";
+      });
+      setTimeout(() => ring.remove(), 480);
+
+      if (profile.theme === "fire" || profile.theme === "radioactive") {
+        const canvas = document.getElementById("alchemyCanvas");
+        canvas.classList.remove("shake-screen");
+        void canvas.offsetWidth;
+        canvas.classList.add("shake-screen");
+        playSound("explosion");
+      } else {
+        playSound("success");
+      }
+
+      const count = 16;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement("div");
+        const size = 5 + Math.random() * 6;
+        const color = profile.colors[i % profile.colors.length];
+        p.style.position = "absolute";
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.borderRadius = "9999px";
+        p.style.backgroundColor = color;
+        p.style.boxShadow = `0 0 8px ${color}`;
+        p.style.transform = "translate(-50%, -50%)";
+        p.style.transition = "transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.52s ease-out";
+        fxLayer.appendChild(p);
+
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const dist = 38 + Math.random() * 55;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+
+        requestAnimationFrame(() => {
+          p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2)`;
+          p.style.opacity = "0";
+        });
+        setTimeout(() => p.remove(), 550);
+      }
+    }
+
+    let inventory = [];
+    let canvasItems = [];
+    let activeCategory = "all";
+    let deviceMode = localStorage.getItem("alchemy_device_mode") || "";
+    let nextCanvasId = 1;
+
+    function getFirebaseBaseUrl() {
+      return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, "");
+    }
+
+    function getGeminiApiKey() {
+      return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim();
+    }
+
+    function saveProgressToLocal() {
+      try {
+        localStorage.setItem("alchemy_inventory_v3", JSON.stringify(inventory));
+        const serializableCanvas = canvasItems.map(ci => ({
+          data: ci.data,
+          x: ci.x,
+          y: ci.y
+        }));
+        localStorage.setItem("alchemy_canvas_v3", JSON.stringify(serializableCanvas));
+      } catch (e) {}
+    }
+
+    function loadProgressFromLocal() {
+      try {
+        const savedInv = JSON.parse(localStorage.getItem("alchemy_inventory_v3") || "null");
+        if (Array.isArray(savedInv) && savedInv.length > 0) {
+          inventory = savedInv;
+        } else {
+          inventory = [...STARTER_ELEMENTS];
+        }
+      } catch (e) {
+        inventory = [...STARTER_ELEMENTS];
+      }
+
+      STARTER_ELEMENTS.forEach(s => {
+        if (!inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === s.name.toLocaleLowerCase("tr-TR"))) {
+          inventory.push({ ...s });
+        }
+      });
+
+      inventory.forEach(item => {
+        item.formula = getElementFormulaText(item);
+      });
+    }
+
+    function setCategoryFilter(cat) {
+      activeCategory = cat;
+      document.querySelectorAll(".cat-tab").forEach(btn => {
+        if (btn.getAttribute("data-cat") === cat) {
+          btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500 text-slate-950 shrink-0 transition";
+        } else {
+          btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition";
+        }
+      });
+      renderInventory();
+    }
+
+    function clearSidebarSearch() {
+      const inp = document.getElementById("sidebarSearchInput");
+      if (inp) {
+        inp.value = "";
+        renderInventory();
+      }
+    }
+
+    function renderInventory() {
+      const listEl = document.getElementById("sidebarInventoryList");
+      const query = (document.getElementById("sidebarSearchInput")?.value || "").toLocaleLowerCase("tr-TR").trim();
+
+      document.getElementById("discoveredCountBadge").textContent = inventory.length;
+      document.getElementById("sidebarCountText").textContent = `${inventory.length} Öğe`;
+      document.getElementById("mobileInvCount").textContent = inventory.length;
+
+      if (!listEl) return;
+      listEl.innerHTML = "";
+
+      const filtered = inventory.filter(item => {
+        const matchCat = activeCategory === "all" || item.cat === activeCategory;
+        const formulaStr = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
+        const matchQuery = !query || item.name.toLocaleLowerCase("tr-TR").includes(query) || formulaStr.includes(query);
+        return matchCat && matchQuery;
+      });
+
+      filtered.forEach(item => {
+        const formulaText = getElementFormulaText(item);
+        const card = document.createElement("div");
+        card.className = "px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-cyan-400/60 text-slate-100 flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing transition shadow-sm";
+        card.title = `${item.name}\nFormül: ${formulaText}`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-xl shrink-0">${item.emoji || "🧪"}</span>
+            <div class="flex flex-col leading-tight min-w-0">
+              <span class="text-xs font-extrabold text-white truncate">${item.name}</span>
+              <span class="text-[10px] font-mono-code text-cyan-400/90 truncate">⚗️ ${formulaText}</span>
+            </div>
+          </div>
+          <span class="text-xs text-slate-400 shrink-0 font-bold">＋</span>
+        `;
+
+        setupSidebarItemInteraction(card, item);
+        listEl.appendChild(card);
+      });
+    }
+
+    function openElementPickerModal() {
+      const modal = document.getElementById("pickerModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      const inp = document.getElementById("pickerSearchInput");
+      if (inp) inp.value = "";
+      renderPickerItems();
+    }
+
+    function closeElementPickerModal() {
+      const modal = document.getElementById("pickerModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function renderPickerItems() {
+      const grid = document.getElementById("pickerGrid");
+      if (!grid) return;
+      const q = (document.getElementById("pickerSearchInput")?.value || "").toLocaleLowerCase("tr-TR").trim();
+      grid.innerHTML = "";
+
+      const filtered = inventory.filter(item => {
+        const fText = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
+        return !q || item.name.toLocaleLowerCase("tr-TR").includes(q) || fText.includes(q);
+      });
+
+      filtered.forEach(item => {
+        const formulaText = getElementFormulaText(item);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "p-2.5 rounded-xl bg-slate-800/90 hover:bg-cyan-950/70 border border-slate-700 hover:border-cyan-400 text-left flex items-center gap-2.5 transition active:scale-95 shadow-sm";
+        btn.innerHTML = `
+          <span class="text-2xl shrink-0">${item.emoji || "🧪"}</span>
+          <div class="flex flex-col leading-tight min-w-0">
+            <span class="text-xs font-extrabold text-white truncate">${item.name}</span>
+            <span class="text-[10px] font-mono-code text-cyan-300/90 truncate">⚗️ ${formulaText}</span>
+          </div>
+        `;
+        btn.onclick = () => {
+          spawnElementNearCenter(item);
+          playSound("spawn");
+          closeElementPickerModal();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function clampCanvasPosition(x, y) {
+      const canvas = document.getElementById("alchemyCanvas");
+      if (!canvas) return { x: 160, y: 160 };
+      const rect = canvas.getBoundingClientRect();
+      const padX = 75;
+      const padY = 42;
+      const maxX = Math.max(padX, rect.width - padX);
+      const maxY = Math.max(padY, rect.height - padY);
+      return {
+        x: Math.min(Math.max(x, padX), maxX),
+        y: Math.min(Math.max(y, padY), maxY)
+      };
+    }
+
+    function updateCanvasEmptyState() {
+      const hint = document.getElementById("canvasEmptyHint");
+      const countTxt = document.getElementById("canvasItemCountText");
+      if (hint) {
+        hint.style.opacity = canvasItems.length === 0 ? "1" : "0";
+      }
+      if (countTxt) {
+        countTxt.textContent = `Tuvalde: ${canvasItems.length} öğe`;
+      }
+    }
+
+    function spawnElementNearCenter(itemData) {
+      const canvas = document.getElementById("alchemyCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const jitterX = (Math.random() - 0.5) * 120;
+      const jitterY = (Math.random() - 0.5) * 90;
+      return spawnElementOnCanvas(itemData, rect.width / 2 + jitterX, rect.height / 2 + jitterY);
+    }
+
+    function spawnElementOnCanvas(itemData, x, y, skipSave = false) {
+      const layer = document.getElementById("canvasItemsLayer");
+      if (!layer) return null;
+
+      const enrichedData = {
+        ...itemData,
+        formula: getElementFormulaText(itemData)
+      };
+
+      const pos = clampCanvasPosition(x, y);
+      const profile = getElementVisualProfile(enrichedData);
+      const id = nextCanvasId++;
+
+      const el = document.createElement("div");
+      el.className = `element-card spawn-pop absolute px-3 py-2 rounded-2xl ${profile.cardBg} border-2 ${profile.cardBorder} text-white shadow-xl flex items-center gap-2.5 cursor-grab active:cursor-grabbing select-none`;
+      el.style.left = `${pos.x}px`;
+      el.style.top = `${pos.y}px`;
+      el.style.transform = "translate(-50%, -50%)";
+      el.style.zIndex = "15";
+
+      el.innerHTML = `
+        <span class="text-xl sm:text-2xl filter drop-shadow select-none shrink-0">${enrichedData.emoji || "🧪"}</span>
+        <div class="flex flex-col leading-tight select-none min-w-0">
+          <span class="font-extrabold tracking-tight text-xs sm:text-sm text-white truncate max-w-[140px] sm:max-w-[180px]">${enrichedData.name}</span>
+          <span class="text-[10px] sm:text-[11px] font-mono-code ${profile.formulaColor} truncate max-w-[145px] sm:max-w-[190px]">⚗️ ${enrichedData.formula}</span>
+        </div>
+      `;
+
+      const record = { id, el, data: enrichedData, profile, x: pos.x, y: pos.y };
+      canvasItems.push(record);
+      layer.appendChild(el);
+
+      setupCanvasCardDrag(record);
+      updateCanvasEmptyState();
+      if (!skipSave) saveProgressToLocal();
+      return record;
+    }
+
+    function removeCanvasItem(record) {
+      const idx = canvasItems.findIndex(i => i.id === record.id);
+      if (idx !== -1) canvasItems.splice(idx, 1);
+      if (record.el && record.el.parentNode) record.el.remove();
+      updateCanvasEmptyState();
+      saveProgressToLocal();
+    }
+
+    function clearCanvas() {
+      canvasItems.forEach(item => {
+        if (item.el) item.el.remove();
+      });
+      canvasItems = [];
+      playSound("trash");
+      updateCanvasEmptyState();
+      saveProgressToLocal();
+    }
+
+    function spawnRandomPair() {
+      if (inventory.length === 0) return;
+      const canvas = document.getElementById("alchemyCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const a = inventory[Math.floor(Math.random() * inventory.length)];
+      const b = inventory[Math.floor(Math.random() * inventory.length)];
+      spawnElementOnCanvas(a, rect.width / 2 - 65, rect.height / 2);
+      spawnElementOnCanvas(b, rect.width / 2 + 65, rect.height / 2);
+      playSound("spawn");
+    }
+
+    function setupSidebarItemInteraction(cardEl, itemData) {
+      let startX = 0;
+      let startY = 0;
+      let isDragging = false;
+      let ghostEl = null;
+
+      const onPointerDown = (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        startX = e.clientX;
+        startY = e.clientY;
+        isDragging = false;
+
+        const onPointerMove = (moveEv) => {
+          const dist = Math.hypot(moveEv.clientX - startX, moveEv.clientY - startY);
+          if (!isDragging && dist > 8) {
+            isDragging = true;
+            const formulaText = getElementFormulaText(itemData);
+            ghostEl = document.createElement("div");
+            ghostEl.className = "fixed px-3 py-2 rounded-2xl bg-slate-900 border-2 border-cyan-400 text-white flex items-center gap-2 text-xs font-bold pointer-events-none z-50 shadow-2xl";
+            ghostEl.style.transform = "translate(-50%, -50%)";
+            ghostEl.innerHTML = `
+              <span class="text-xl">${itemData.emoji || "🧪"}</span>
+              <div class="flex flex-col leading-tight">
+                <span class="font-extrabold">${itemData.name}</span>
+                <span class="text-[10px] font-mono-code text-cyan-300">⚗️ ${formulaText}</span>
+              </div>
+            `;
+            document.body.appendChild(ghostEl);
+          }
+          if (isDragging && ghostEl) {
+            ghostEl.style.left = `${moveEv.clientX}px`;
+            ghostEl.style.top = `${moveEv.clientY}px`;
+          }
+        };
+
+        const onPointerUp = (upEv) => {
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+
+          if (ghostEl) {
+            ghostEl.remove();
+            ghostEl = null;
+          }
+
+          const canvas = document.getElementById("alchemyCanvas");
+          const rect = canvas.getBoundingClientRect();
+
+          if (isDragging) {
+            if (
+              upEv.clientX >= rect.left &&
+              upEv.clientX <= rect.right &&
+              upEv.clientY >= rect.top &&
+              upEv.clientY <= rect.bottom
+            ) {
+              const localX = upEv.clientX - rect.left;
+              const localY = upEv.clientY - rect.top;
+              const spawned = spawnElementOnCanvas(itemData, localX, localY);
+              playSound("spawn");
+              if (spawned) checkAndTriggerMerge(spawned);
+            }
+          } else {
+            spawnElementNearCenter(itemData);
+            playSound("spawn");
+          }
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      };
+
+      cardEl.addEventListener("pointerdown", onPointerDown);
+    }
+
+    function setupCanvasCardDrag(record) {
+      const el = record.el;
+      let offsetX = 0;
+      let offsetY = 0;
+      let highlightedTarget = null;
+      let lastTapTime = 0;
+
+      el.addEventListener("pointerdown", (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        e.stopPropagation();
+
+        const now = Date.now();
+        if (now - lastTapTime < 280) {
+          spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
+          playSound("spawn");
+          lastTapTime = 0;
+          return;
+        }
+        lastTapTime = now;
+
+        const canvas = document.getElementById("alchemyCanvas");
+        const rect = canvas.getBoundingClientRect();
+        offsetX = e.clientX - rect.left - record.x;
+        offsetY = e.clientY - rect.top - record.y;
+
+        el.style.zIndex = "50";
+
+        const onMove = (moveEv) => {
+          const r = canvas.getBoundingClientRect();
+          const rawX = moveEv.clientX - r.left - offsetX;
+          const rawY = moveEv.clientY - r.top - offsetY;
+          const clamped = clampCanvasPosition(rawX, rawY);
+
+          record.x = clamped.x;
+          record.y = clamped.y;
+          el.style.left = `${clamped.x}px`;
+          el.style.top = `${clamped.y}px`;
+
+          const trash = document.getElementById("trashDropZone");
+          const trashRect = trash.getBoundingClientRect();
+          const overTrash =
+            moveEv.clientX >= trashRect.left &&
+            moveEv.clientX <= trashRect.right &&
+            moveEv.clientY >= trashRect.top &&
+            moveEv.clientY <= trashRect.bottom;
+
+          trash.style.borderColor = overTrash ? "#f43f5e" : "";
+          trash.style.transform = overTrash ? "scale(1.08)" : "";
+
+          const candidate = findMergeCandidate(record);
+          if (highlightedTarget && highlightedTarget !== candidate) {
+            highlightedTarget.el.classList.remove("merge-target");
+          }
+          if (candidate) {
+            candidate.el.classList.add("merge-target");
+          }
+          highlightedTarget = candidate;
+        };
+
+        const onUp = (upEv) => {
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          el.style.zIndex = "15";
+
+          const trash = document.getElementById("trashDropZone");
+          trash.style.borderColor = "";
+          trash.style.transform = "";
+
+          if (highlightedTarget) {
+            highlightedTarget.el.classList.remove("merge-target");
+            highlightedTarget = null;
+          }
+
+          const trashRect = trash.getBoundingClientRect();
+          if (
+            upEv.clientX >= trashRect.left &&
+            upEv.clientX <= trashRect.right &&
+            upEv.clientY >= trashRect.top &&
+            upEv.clientY <= trashRect.bottom
+          ) {
+            playSound("trash");
+            removeCanvasItem(record);
+            return;
+          }
+
+          checkAndTriggerMerge(record);
+          saveProgressToLocal();
+        };
+
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+      });
+    }
+
+    function findMergeCandidate(sourceRecord) {
+      let best = null;
+      let minDist = 72;
+      for (const other of canvasItems) {
+        if (other.id === sourceRecord.id || other.merging) continue;
+        const d = Math.hypot(other.x - sourceRecord.x, other.y - sourceRecord.y);
+        if (d < minDist) {
+          minDist = d;
+          best = other;
+        }
+      }
+      return best;
+    }
+
+    function checkAndTriggerMerge(sourceRecord) {
+      const target = findMergeCandidate(sourceRecord);
+      if (target) {
+        combineTwoCanvasRecords(sourceRecord, target);
+      }
+    }
+
+    function createSynthesisPuff(x, y, statusText) {
+      const fxLayer = document.getElementById("canvasFxLayer");
+      const puff = document.createElement("div");
+      puff.className = "synthesis-puff absolute z-40 px-3.5 py-2 rounded-2xl bg-slate-900/95 border-2 border-cyan-400 text-xs font-bold text-white shadow-2xl flex items-center gap-2";
+      puff.style.left = `${x}px`;
+      puff.style.top = `${y}px`;
+      puff.style.transform = "translate(-50%, -50%)";
+      puff.innerHTML = `
+        <span class="text-base animate-spin">⚗️</span>
+        <span class="puff-label">${statusText}</span>
+      `;
+      fxLayer.appendChild(puff);
+      return puff;
+    }
+
+    function updatePuffStatus(puffEl, text) {
+      if (!puffEl) return;
+      const lbl = puffEl.querySelector(".puff-label");
+      if (lbl) lbl.textContent = text;
+    }
+
+    async function combineTwoCanvasRecords(recA, recB) {
+      recA.merging = true;
+      recB.merging = true;
+
+      const itemA = recA.data;
+      const itemB = recB.data;
+      const midX = (recA.x + recB.x) / 2;
+      const midY = (recA.y + recB.y) / 2;
+
+      removeCanvasItem(recA);
+      removeCanvasItem(recB);
+
+      const normKey = normalizeKey(itemA.name, itemB.name);
+      const exactKey = [itemA.name.toLocaleLowerCase("tr-TR"), itemB.name.toLocaleLowerCase("tr-TR")].sort().join("_");
+      const recipeFormulaString = `${itemA.name} + ${itemB.name}`;
+
+      if (REACTION_CACHE[normKey] === "NO_REACTION") {
+        showToast(`"${itemA.name}" ve "${itemB.name}" birleşmiyor.`, "warn");
+        playSound("fail");
+        spawnElementOnCanvas(itemA, midX - 42, midY);
+        spawnElementOnCanvas(itemB, midX + 42, midY);
+        return;
+      }
+
+      const localMatch = NORMALIZED_RECIPES[normKey] || NORMALIZED_RECIPES[exactKey] || MASTER_RECIPES[exactKey];
+      if (localMatch) {
+        const resultElement = {
+          ...localMatch,
+          formula: localMatch.formula || recipeFormulaString
+        };
+        completeSynthesisSuccess(midX, midY, resultElement, false);
+        return;
+      }
+
+      const puffEl = createSynthesisPuff(midX, midY, "Kütüphaneye bakılıyor...");
+
+      try {
+        const fbResult = await fetchRecipeFromFirebase(normKey);
+        if (fbResult) {
+          puffEl.remove();
+          if (fbResult.name === "NO_REACTION") {
+            REACTION_CACHE[normKey] = "NO_REACTION";
+            showToast(`"${itemA.name}" ve "${itemB.name}" tepkimeye girmedi.`, "warn");
+            playSound("fail");
+            spawnElementOnCanvas(itemA, midX - 42, midY);
+            spawnElementOnCanvas(itemB, midX + 42, midY);
+            return;
+          }
+          const enrichedFb = {
+            ...fbResult,
+            formula: fbResult.formula || recipeFormulaString
+          };
+          NORMALIZED_RECIPES[normKey] = enrichedFb;
+          completeSynthesisSuccess(midX, midY, enrichedFb, false);
+          return;
+        }
+
+        updatePuffStatus(puffEl, "☁️ Yapay zekâ düşünüyor...");
+        const aiResult = await askGeminiForRecipe(itemA.name, itemB.name);
+        puffEl.remove();
+
+        if (aiResult && aiResult.name && aiResult.name !== "NO_REACTION") {
+          const enrichedAi = {
+            name: aiResult.name,
+            emoji: aiResult.emoji || "✨",
+            cat: aiResult.cat || "madde",
+            formula: recipeFormulaString
+          };
+          NORMALIZED_RECIPES[normKey] = enrichedAi;
+          ELEMENT_FORMULA_MAP[enrichedAi.name.toLocaleLowerCase("tr-TR")] = enrichedAi.formula;
+          saveRecipeToFirebase(normKey, enrichedAi);
+          completeSynthesisSuccess(midX, midY, enrichedAi, true);
+          refreshGlobalFormulaCount();
+        } else {
+          REACTION_CACHE[normKey] = "NO_REACTION";
+          saveRecipeToFirebase(normKey, { name: "NO_REACTION" });
+          showToast(`"${itemA.name}" + "${itemB.name}" anlamlı bir bileşik oluşturmadı.`, "warn");
+          playSound("fail");
+          spawnElementOnCanvas(itemA, midX - 42, midY);
+          spawnElementOnCanvas(itemB, midX + 42, midY);
+        }
+      } catch (err) {
+        puffEl.remove();
+        showToast("Bağlantı hatası oluştu, elementler geri bırakıldı.", "warn");
+        spawnElementOnCanvas(itemA, midX - 42, midY);
+        spawnElementOnCanvas(itemB, midX + 42, midY);
+      }
+    }
+
+    function completeSynthesisSuccess(x, y, resultItem, isAiDiscovery) {
+      const formulaText = resultItem.formula || getElementFormulaText(resultItem);
+      const finalItem = {
+        ...resultItem,
+        formula: formulaText
+      };
+
+      ELEMENT_FORMULA_MAP[finalItem.name.toLocaleLowerCase("tr-TR")] = formulaText;
+
+      const isNew = !inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === finalItem.name.toLocaleLowerCase("tr-TR"));
+      if (isNew) {
+        inventory.unshift(finalItem);
+        renderInventory();
+        showToast(
+          `🎉 Yeni Keşif: ${finalItem.emoji || "🧪"} ${finalItem.name} (${formulaText})`,
+          isAiDiscovery ? "ai" : "new"
+        );
+      }
+
+      const spawned = spawnElementOnCanvas(finalItem, x, y);
+      if (spawned) {
+        triggerVfxBurst(spawned.x, spawned.y, spawned.profile);
+      }
+      saveProgressToLocal();
+    }
+
+    async function fetchRecipeFromFirebase(key) {
+      try {
+        const url = `${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data) return null;
+        if (typeof data === "string") {
+          return { name: data, emoji: "🧪", cat: "madde" };
+        }
+        return data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function saveRecipeToFirebase(key, payload) {
+      try {
+        const url = `${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`;
+        await fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    async function askGeminiForRecipe(elem1, elem2) {
+      const apiKey = getGeminiApiKey();
+      if (!apiKey) return null;
+
+      const prompt = `Sen bilimsel ve teknolojik bir element birleştirme oyununun sentez motorusun.
+Kullanıcı "${elem1}" ve "${elem2}" maddelerini birleştirdi.
+Kurallar:
+1. Ortaya çıkan şey gerçekçi bir kimyasal bileşik, malzeme, doğa olayı veya teknolojik cihaz olmalıdır.
+2. ASLA kelimenin başına "Süper, Mega, Büyük, Çift" ekleyerek kısır döngü yapma. Aynı iki şey birleşiyorsa bir üst kavram üret (Örn: Mikroçip + Mikroçip = İşlemci).
+3. Eğer bu iki şeyin birleşmesi tamamen anlamsızsa name alanına "NO_REACTION" yaz.
+4. SADECE geçerli bir JSON döndür:
+{"name": "Sonuç Adı", "emoji": "🧪", "cat": "madde"}
+(cat değeri şunlardan biri olmalı: "element", "madde", "elektronik", "enerji")`;
+
+      const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+      for (const modelName of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.3 }
+            })
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    async function refreshGlobalFormulaCount() {
+      const localCount = Object.keys(MASTER_RECIPES).length + STARTER_ELEMENTS.length;
+      const badge = document.getElementById("globalFormulaCount");
+      try {
+        const res = await fetch(`${getFirebaseBaseUrl()}/recipes.json?shallow=true`);
+        if (res.ok) {
+          const data = await res.json();
+          const cloudCount = data ? Object.keys(data).length : 0;
+          const total = Math.max(localCount, cloudCount + STARTER_ELEMENTS.length);
+          badge.textContent = `${total}+`;
+          return;
+        }
+      } catch (e) {}
+      badge.textContent = `${localCount}+`;
+    }
+
+    async function syncAllLocalRecipesToFirebase() {
+      const btn = document.getElementById("syncFirebaseBtn");
+      const status = document.getElementById("syncStatusText");
+      btn.disabled = true;
+      status.textContent = "⏳ Formüller Firebase'e yükleniyor...";
+
+      try {
+        const payload = {};
+        for (const [k, v] of Object.entries(NORMALIZED_RECIPES)) {
+          payload[k] = v;
+        }
+        const res = await fetch(`${getFirebaseBaseUrl()}/recipes.json`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          status.textContent = `✅ Başarılı! ${Object.keys(payload).length} formül buluta eşitlendi.`;
+          refreshGlobalFormulaCount();
+        } else {
+          status.textContent = "⚠️ Firebase yazma izni hatası (Rules kontrol edin).";
+        }
+      } catch (e) {
+        status.textContent = "⚠️ Bağlantı hatası oluştu.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function showRecipeHint() {
+      const invNames = new Set(inventory.map(i => i.name.toLocaleLowerCase("tr-TR")));
+      const candidates = [];
+
+      for (const [rawKey, result] of Object.entries(MASTER_RECIPES)) {
+        const parts = rawKey.split("_");
+        if (parts.length !== 2) continue;
+        const p1 = parts[0].trim().toLocaleLowerCase("tr-TR");
+        const p2 = parts[1].trim().toLocaleLowerCase("tr-TR");
+        const resLower = result.name.toLocaleLowerCase("tr-TR");
+
+        if (invNames.has(p1) && invNames.has(p2) && !invNames.has(resLower)) {
+          candidates.push({
+            a: formatTitleCase(p1),
+            b: formatTitleCase(p2),
+            target: result.name,
+            emoji: result.emoji
+          });
+        }
+      }
+
+      if (candidates.length > 0) {
+        const pick = candidates[Math.floor(Math.random() * candidates.length)];
+        showToast(`💡 İpucu: "${pick.a}" + "${pick.b}" birleştirirsen ${pick.emoji} ??? oluşur!`, "hint");
+      } else {
+        showToast("💡 İpucu: İki elementi üst üste sürükleyerek yeni teknolojiler sentezle!", "hint");
+      }
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+      const el = document.createElement("div");
+      let style = "bg-slate-900/95 border-cyan-500/60 text-cyan-200";
+      if (type === "new") style = "bg-emerald-950/95 border-emerald-400 text-emerald-100";
+      if (type === "ai") style = "bg-purple-950/95 border-purple-400 text-purple-100";
+      if (type === "warn") style = "bg-rose-950/95 border-rose-500/70 text-rose-200";
+      if (type === "hint") style = "bg-amber-950/95 border-amber-400 text-amber-100";
+
+      el.className = `px-4 py-2 rounded-2xl border-2 text-xs sm:text-sm font-bold shadow-2xl transition-all duration-300 ${style}`;
+      el.textContent = msg;
+      container.appendChild(el);
+
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(-8px)";
+        setTimeout(() => el.remove(), 300);
+      }, 3200);
+    }
+
+    function applyDeviceModeUI(mode) {
+      deviceMode = mode;
+      localStorage.setItem("alchemy_device_mode", mode);
+      const sidebar = document.getElementById("sidebarPanel");
+      const quickBtn = document.getElementById("mobileQuickAddBtn");
+      const icon = document.getElementById("deviceModeIcon");
+      const label = document.getElementById("deviceModeLabel");
+
+      if (mode === "mobile") {
+        sidebar.classList.add("hidden");
+        sidebar.classList.remove("md:flex");
+        quickBtn.classList.remove("md:hidden");
+        icon.textContent = "📱";
+        label.textContent = "Mobil";
+      } else {
+        sidebar.classList.remove("hidden");
+        sidebar.classList.add("md:flex");
+        quickBtn.classList.add("md:hidden");
+        icon.textContent = "💻";
+        label.textContent = "PC";
+      }
+
+      setTimeout(reclampAllCanvasItems, 60);
+    }
+
+    function selectDeviceMode(mode) {
+      const modal = document.getElementById("deviceModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      applyDeviceModeUI(mode);
+    }
+
+    function toggleDeviceMode() {
+      const next = deviceMode === "mobile" ? "pc" : "mobile";
+      applyDeviceModeUI(next);
+      showToast(`Görünüm "${next === "mobile" ? "Telefon / Mobil" : "Bilgisayar (PC)"}" moduna alındı.`);
+    }
+
+    function reclampAllCanvasItems() {
+      canvasItems.forEach(item => {
+        const clamped = clampCanvasPosition(item.x, item.y);
+        item.x = clamped.x;
+        item.y = clamped.y;
+        item.el.style.left = `${clamped.x}px`;
+        item.el.style.top = `${clamped.y}px`;
+      });
+    }
+
+    function openSettingsModal() {
+      document.getElementById("cfgFirebaseUrl").value = getFirebaseBaseUrl();
+      document.getElementById("cfgGeminiKey").value = getGeminiApiKey();
+      const modal = document.getElementById("settingsModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function saveSettingsFromModal() {
+      const fb = document.getElementById("cfgFirebaseUrl").value.trim();
+      const key = document.getElementById("cfgGeminiKey").value.trim();
+      if (fb) localStorage.setItem("alchemy_fb_url", fb);
+      if (key) localStorage.setItem("alchemy_gemini_key", key);
+      closeSettingsModal();
+      refreshGlobalFormulaCount();
+      showToast("Ayarlar kaydedildi.");
+    }
+
+    function resetAllProgress() {
+      localStorage.removeItem("alchemy_inventory_v3");
+      localStorage.removeItem("alchemy_canvas_v3");
+      clearCanvas();
+      inventory = [...STARTER_ELEMENTS];
+      renderInventory();
+      closeSettingsModal();
+      showToast("Tüm ilerleme sıfırlandı ve başlangıç elementlerine dönüldü.");
+    }
+
+    window.addEventListener("resize", reclampAllCanvasItems);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      prepareMasterRecipes();
+      loadProgressFromLocal();
+      renderInventory();
+      refreshGlobalFormulaCount();
+
+      try {
+        const savedCanvas = JSON.parse(localStorage.getItem("alchemy_canvas_v3") || "[]");
+        if (Array.isArray(savedCanvas) && savedCanvas.length > 0) {
+          savedCanvas.forEach(entry => {
+            if (entry && entry.data) {
+              spawnElementOnCanvas(entry.data, entry.x || 180, entry.y || 180, true);
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (!deviceMode) {
+        const devModal = document.getElementById("deviceModal");
+        devModal.classList.remove("hidden");
+        devModal.classList.add("flex");
+        const autoMode = window.innerWidth < 768 ? "mobile" : "pc";
+        applyDeviceModeUI(autoMode);
+      } else {
+        applyDeviceModeUI(deviceMode);
+      }
+    });
+  </script>
+</body>
+</html>
