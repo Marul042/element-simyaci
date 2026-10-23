@@ -114,6 +114,7 @@
 
     <!-- Orta: Canlı Sistem Üretimi & Keşif Sayaçları -->
     <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+      <!-- Toplam Sistem / Bulut Formül Havuzu -->
       <div class="px-2 sm:px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5" title="Sistemdeki ve Buluttaki Toplam Formül Sayısı">
         <span class="text-xs sm:text-sm">🌐</span>
         <div class="flex flex-col leading-none">
@@ -122,6 +123,7 @@
         </div>
       </div>
 
+      <!-- Oyuncunun Keşfettiği Element Sayısı -->
       <div class="px-2 sm:px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center gap-1.5" title="Senin Keşfettiğin Elementler">
         <span class="text-xs sm:text-sm">🧪</span>
         <div class="flex flex-col leading-none">
@@ -131,6 +133,7 @@
       </div>
     </div>
 
+    <!-- Sağ: Cihaz Modu, Ses, Bulut Eşitleme ve Ayarlar -->
     <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
       <button id="deviceModeBtn" onclick="toggleDeviceMode()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Bilgisayar / Telefon Görünümü Değiştir">
         <span id="deviceModeIcon">💻</span>
@@ -140,32 +143,32 @@
       <button id="soundToggleBtn" onclick="toggleSound()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition" title="Ses Efektlerini Aç/Kapat">
         <span id="soundIcon">🔊</span>
       </button>
-
-      <button onclick="openSettingsModal()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Firebase Bulut & API Ayarları">
-        <span>☁️</span>
-        <span class="hidden lg:inline">Kataloğu Eşitle</span>
-      </button>
     </div>
   </header>
 
+  <!-- 2. İKİNCİ SATIR: BAĞIMSIZ ELEMENT EKLE VE HIZLI AKSİYON ÇUBUĞU -->
   <div class="w-full bg-slate-900/80 border-b border-slate-800/80 px-2.5 sm:px-4 py-1.5 flex items-center justify-between gap-2 z-20 shrink-0 overflow-x-auto">
     <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <!-- Ana Element Ekle Butonu -->
       <button onclick="openElementPickerModal()" class="px-3 sm:px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-cyan-500/20 active:scale-95 transition">
         <span class="text-sm sm:text-base">➕</span>
         <span>Element Ekle</span>
       </button>
 
+      <!-- Rastgele 2 Element At -->
       <button onclick="spawnRandomPair()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
         <span>🎲</span>
         <span>Rastgele 2</span>
       </button>
 
+      <!-- İpucu Butonu -->
       <button onclick="showRecipeHint()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-1 active:scale-95 transition">
         <span>💡</span>
         <span>İpucu</span>
       </button>
     </div>
 
+    <!-- Sağ: Tuvaldeki Öğe Sayısı & Temizle -->
     <div class="flex items-center gap-2 shrink-0">
       <span id="canvasItemCountText" class="text-[11px] text-slate-400 hidden md:inline">Tuvalde: 0 öğe</span>
       <button onclick="clearCanvas()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-1 active:scale-95 transition" title="Tuvaldeki Tüm Elementleri Temizle">
@@ -175,8 +178,12 @@
     </div>
   </div>
 
+  <!-- 3. ANA ÇALIŞMA ALANI (TUVAL + SAĞ KÜTÜPHANE PANELİ) -->
   <div class="flex-1 flex relative overflow-hidden w-full h-full">
+
+    <!-- SOL/ORTA: SENTEZ TUVALİ -->
     <main id="alchemyCanvas" class="flex-1 relative alchemy-canvas-bg overflow-hidden w-full h-full">
+      <!-- Arka Plan Filigran İpucu -->
       <div id="canvasEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6 text-center transition-opacity duration-300">
         <div class="w-16 h-16 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-3xl mb-3 shadow-inner">
           🧪
@@ -189,10 +196,16 @@
         </p>
       </div>
 
+      <!-- Dinamik Görsel Efekt (VFX) Katmanı -->
       <div id="canvasFxLayer" class="absolute inset-0 pointer-events-none z-20 overflow-hidden"></div>
+
+      <!-- Tuval Üzerindeki Sürüklenebilir Elementler Katmanı -->
       <div id="canvasItemsLayer" class="absolute inset-0 z-10 overflow-hidden"></div>
+
+      <!-- Bildirim / Yeni Keşif Toast Kutusu -->
       <div id="toastContainer" class="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-none w-11/12 max-w-md"></div>
 
+      <!-- Sol Alt: Çöp Kutusu Alanı -->
       <div id="trashDropZone" class="absolute bottom-3 left-3 z-30 px-3.5 py-2.5 rounded-2xl bg-slate-900/90 border-2 border-slate-700/80 text-slate-400 flex items-center gap-2 shadow-xl transition-all duration-150">
         <span class="text-lg">🗑️</span>
         <div class="flex flex-col leading-tight">
@@ -201,19 +214,23 @@
         </div>
       </div>
 
+      <!-- Mobil Sağ Alt Yüzen Hızlı Ekle Butonu -->
       <button id="mobileQuickAddBtn" onclick="openElementPickerModal()" class="md:hidden absolute bottom-3 right-3 z-30 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-extrabold text-xs shadow-xl shadow-cyan-500/30 flex items-center gap-1.5 active:scale-95 transition">
         <span class="text-base">🧪</span>
         <span>Envanter (<span id="mobileInvCount">14</span>)</span>
       </button>
     </main>
 
+    <!-- SAĞ: ELEMENT KÜTÜPHANESİ (PC'de Sabit Yan Panel) -->
     <aside id="sidebarPanel" class="w-72 lg:w-80 bg-slate-900/95 border-l border-slate-800 flex flex-col z-20 shrink-0 hidden md:flex">
+      <!-- Arama ve Kategori Filtresi -->
       <div class="p-3 border-b border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Element Kütüphanesi</span>
           <span class="text-[11px] font-mono-code text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-lg" id="sidebarCountText">14 Öğe</span>
         </div>
 
+        <!-- Arama Kutusu -->
         <div class="relative">
           <input
             id="sidebarSearchInput"
@@ -226,6 +243,7 @@
           <button onclick="clearSidebarSearch()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs">✕</button>
         </div>
 
+        <!-- Kategori Sekmeleri -->
         <div class="flex items-center gap-1 overflow-x-auto pb-1">
           <button onclick="setCategoryFilter('all')" data-cat="all" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500 text-slate-950 shrink-0 transition">Tümü</button>
           <button onclick="setCategoryFilter('element')" data-cat="element" class="cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition">Atom</button>
@@ -235,12 +253,15 @@
         </div>
       </div>
 
+      <!-- Envanter Listesi -->
       <div id="sidebarInventoryList" class="flex-1 overflow-y-auto p-2.5 grid grid-cols-1 gap-1.5 content-start"></div>
     </aside>
   </div>
 
+  <!-- 4. MODAL: EVRENSEL ELEMENT EKLEME PENCERESİ (HEM PC HEM MOBİL) -->
   <div id="pickerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-6">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Başlık -->
       <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-lg">➕</span>
@@ -252,6 +273,7 @@
         <button onclick="closeElementPickerModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm flex items-center justify-center">✕</button>
       </div>
 
+      <!-- Arama -->
       <div class="p-3 border-b border-slate-800 bg-slate-950/50">
         <input
           id="pickerSearchInput"
@@ -262,8 +284,10 @@
         />
       </div>
 
+      <!-- Element Izgarası -->
       <div id="pickerGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 content-start"></div>
 
+      <!-- Alt Bilgi -->
       <div class="px-4 py-2.5 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
         <span>Her öğenin altında kimyasal formülü veya üretim tarifi yer alır.</span>
         <button onclick="closeElementPickerModal()" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">Kapat</button>
@@ -271,6 +295,7 @@
     </div>
   </div>
 
+  <!-- 5. MODAL: İLK AÇILIŞ CİHAZ SEÇİMİ (PC vs TELEFON) -->
   <div id="deviceModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
       <div class="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-3xl mx-auto mb-3">
@@ -295,6 +320,7 @@
     </div>
   </div>
 
+  <!-- 6. MODAL: BULUT EŞİTLEME, API AYARLARI VE SIFIRLAMA -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -343,9 +369,13 @@
   </div>
 
   <script>
+    /* =========================================================================
+       1. BAŞLANGIÇ ELEMENTLERİ VE 235+ FORMÜL KÜTÜPHANESİ
+       ========================================================================= */
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
     const DEFAULT_GEMINI_KEY = "AIzaSyDdlKNwxzVBBQmpsg0YsYTLhHM--PSi6VY";
 
+    // Temel Başlangıç Elementleri (Altlarında Kimyasal Sembol ve Atom No yazar)
     const STARTER_ELEMENTS = [
       { name: "Hidrojen", emoji: "💧", cat: "element", formula: "H • Atom No: 1", desc: "Evrenin en hafif ve en bol elementi" },
       { name: "Oksijen", emoji: "💨", cat: "element", formula: "O₂ • Atom No: 8", desc: "Yaşam ve yanma için temel gaz" },
@@ -363,7 +393,9 @@
       { name: "Işık", emoji: "💡", cat: "enerji", formula: "hν • Foton Dalgası", desc: "Elektromanyetik ışıma ve fotonlar" }
     ];
 
+    // Zenginleştirilmiş Yerleşik Formül Havuzu
     const MASTER_RECIPES = {
+      // Kendiyle Birleşen Temel Elementler
       "hidrojen_hidrojen": { name: "Helyum (He)", emoji: "🎈", cat: "element", formula: "Hidrojen + Hidrojen (Füzyon)" },
       "helyum (he)_helyum (he)": { name: "Yıldız Çekirdeği", emoji: "🌟", cat: "enerji", formula: "Helyum + Helyum" },
       "oksijen_oksijen": { name: "Ozon (O₃)", emoji: "🛡️", cat: "madde", formula: "Oksijen + Oksijen" },
@@ -374,6 +406,8 @@
       "ateş_ateş": { name: "Plazma", emoji: "☄️", cat: "enerji", formula: "Ateş + Ateş" },
       "elektrik_elektrik": { name: "Yıldırım", emoji: "🌩️", cat: "enerji", formula: "Elektrik + Elektrik" },
       "ışık_ışık": { name: "Lazer", emoji: "🔦", cat: "enerji", formula: "Işık + Işık" },
+
+      // Temel Bileşikler (Su, Hava, Asit, Metal Alaşımlar)
       "hidrojen_oksijen": { name: "Su (H₂O)", emoji: "🌊", cat: "madde", formula: "Hidrojen + Oksijen" },
       "su (h₂o)_su (h₂o)": { name: "Okyanus", emoji: "🌏", cat: "madde", formula: "Su + Su" },
       "su (h₂o)_ateş": { name: "Buhar", emoji: "♨️", cat: "madde", formula: "Su + Ateş" },
@@ -387,6 +421,8 @@
       "metan gazı (ch₄)_oksijen": { name: "Alev Patlaması", emoji: "💥", cat: "enerji", formula: "Metan Gazı + Oksijen" },
       "azot_hidrojen": { name: "Amonyak (NH₃)", emoji: "🧪", cat: "madde", formula: "Azot + Hidrojen" },
       "amonyak (nh₃)_oksijen": { name: "Nitrik Asit", emoji: "⚗️", cat: "madde", formula: "Amonyak + Oksijen" },
+
+      // Metaller, Cam ve Yapı Malzemeleri
       "demir_karbon": { name: "Çelik", emoji: "⚔️", cat: "madde", formula: "Demir + Karbon" },
       "demir_oksijen": { name: "Pas (Demir Oksit)", emoji: "🧱", cat: "madde", formula: "Demir + Oksijen" },
       "demir_ateş": { name: "Erimiş Metal", emoji: "🌋", cat: "madde", formula: "Demir + Ateş" },
@@ -398,6 +434,8 @@
       "cam_elektrik": { name: "Ampul", emoji: "💡", cat: "elektronik", formula: "Cam + Elektrik" },
       "kum (silika)_su (h₂o)": { name: "Kil", emoji: "🏺", cat: "madde", formula: "Kum + Su" },
       "kil_ateş": { name: "Seramik", emoji: "🧱", cat: "madde", formula: "Kil + Ateş" },
+
+      // Elektrik & Elektronik Temelleri
       "bakır_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır + Elektrik" },
       "bakır_ateş": { name: "Bakır Tel", emoji: "➰", cat: "madde", formula: "Bakır + Ateş" },
       "bakır tel_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır Tel + Elektrik" },
@@ -406,6 +444,8 @@
       "lityum_elektrik": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Elektrik" },
       "lityum_karbon": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Karbon" },
       "batarya_batarya": { name: "Güç İstasyonu", emoji: "⚡", cat: "enerji", formula: "Batarya + Batarya" },
+
+      // Yarı İletkenler, Çip, Ekran ve Bilgisayar Mimarisi
       "silisyum_elektrik": { name: "Transistör", emoji: "🎛️", cat: "elektronik", formula: "Silisyum + Elektrik" },
       "silisyum_ateş": { name: "Silikon Plaka", emoji: "💿", cat: "elektronik", formula: "Silisyum + Ateş" },
       "transistör_transistör": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Transistör + Transistör" },
@@ -416,6 +456,8 @@
       "mikroçip_kablo": { name: "Anakart", emoji: "🟩", cat: "elektronik", formula: "Mikroçip + Kablo" },
       "işlemci (cpu)_anakart": { name: "Bilgisayar", emoji: "💻", cat: "elektronik", formula: "İşlemci (CPU) + Anakart" },
       "işlemci (cpu)_ışık": { name: "Ekran Kartı (GPU)", emoji: "🎮", cat: "elektronik", formula: "İşlemci (CPU) + Işık" },
+
+      // Ekran, Akıllı Telefon ve Tablet Ağacı
       "cam_ışık": { name: "Ekran Paneli", emoji: "🖥️", cat: "elektronik", formula: "Cam + Işık" },
       "cam_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Cam + Mikroçip" },
       "ekran paneli_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Ekran Paneli + Mikroçip" },
@@ -425,6 +467,8 @@
       "akıllı telefon_dokunmatik ekran": { name: "Tablet", emoji: "📟", cat: "elektronik", formula: "Akıllı Telefon + Dokunmatik Ekran" },
       "tablet_işlemci (cpu)": { name: "Dizüstü Bilgisayar", emoji: "💻", cat: "elektronik", formula: "Tablet + İşlemci (CPU)" },
       "akıllı telefon_zaman": { name: "Akıllı Saat", emoji: "⌚", cat: "elektronik", formula: "Akıllı Telefon + Zaman" },
+
+      // Yazılım, İnternet, Yapay Zekâ ve Robotik
       "işlemci (cpu)_elektrik": { name: "Yazılım Kodu", emoji: "👨‍💻", cat: "elektronik", formula: "İşlemci (CPU) + Elektrik" },
       "bilgisayar_bilgisayar": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Bilgisayar" },
       "bilgisayar_fiber optik": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Fiber Optik" },
@@ -435,6 +479,8 @@
       "yapay zekâ (ai)_elektrik motoru": { name: "Robot", emoji: "🦾", cat: "elektronik", formula: "Yapay Zekâ (AI) + Elektrik Motoru" },
       "robot_yapay zekâ (ai)": { name: "İnsansı Robot (Android)", emoji: "🦿", cat: "elektronik", formula: "Robot + Yapay Zekâ (AI)" },
       "bilgisayar_lazer": { name: "Kuantum Bilgisayar", emoji: "⚛️", cat: "elektronik", formula: "Bilgisayar + Lazer" },
+
+      // Nükleer & Uzay Teknolojisi
       "uranyum_uranyum": { name: "Kritik Kütle", emoji: "☢️", cat: "enerji", formula: "Uranyum + Uranyum" },
       "kritik kütle_kritik kütle": { name: "Nükleer Patlama", emoji: "🍄", cat: "enerji", formula: "Kritik Kütle + Kritik Kütle" },
       "uranyum_su (h₂o)": { name: "Nükleer Reaktör", emoji: "🏭", cat: "enerji", formula: "Uranyum + Su" },
@@ -443,6 +489,8 @@
       "roket motoru_bilgisayar": { name: "Uzay Gemisi", emoji: "🛸", cat: "elektronik", formula: "Roket Motoru + Bilgisayar" },
       "uzay gemisi_güneş": { name: "Uzay İstasyonu", emoji: "🛰️", cat: "elektronik", formula: "Uzay Gemisi + Güneş" },
       "ışık_silisyum": { name: "Güneş Paneli", emoji: "☀️", cat: "enerji", formula: "Işık + Silisyum" },
+
+      // Organik Yaşam ve Doğa
       "su (h₂o)_karbon": { name: "Organik Molekül", emoji: "🧬", cat: "madde", formula: "Su + Karbon" },
       "organik molekül_elektrik": { name: "Hücre", emoji: "🦠", cat: "madde", formula: "Organik Molekül + Elektrik" },
       "organik molekül_zaman": { name: "Yaşam", emoji: "🌱", cat: "madde", formula: "Organik Molekül + Zaman" },
@@ -458,6 +506,7 @@
     const REACTION_CACHE = {};
     const ELEMENT_FORMULA_MAP = {};
 
+    // Metin baş harflerini Türkçe uyumlu büyüt
     function formatTitleCase(str) {
       return (str || "")
         .split(" ")
@@ -465,6 +514,7 @@
         .join(" ");
     }
 
+    // Anahtar normalizasyonu (Sıradan ve parantezlerden bağımsız)
     function normalizeKey(a, b) {
       const clean = (s) => (s || "")
         .toLocaleLowerCase("tr-TR")
@@ -488,6 +538,7 @@
           if (!val.formula) {
             val.formula = `${p1} + ${p2}`;
           }
+          // Hem tam anahtar hem parantezsiz anahtar olarak kaydet
           const normKey = normalizeKey(parts[0], parts[1]);
           NORMALIZED_RECIPES[normKey] = val;
           const exactKey = [parts[0].trim().toLocaleLowerCase("tr-TR"), parts[1].trim().toLocaleLowerCase("tr-TR")].sort().join("_");
@@ -499,6 +550,7 @@
       }
     }
 
+    // Herhangi bir elementin altındaki formül bilgisini döndürür
     function getElementFormulaText(item) {
       if (!item) return "Temel Madde";
       if (item.formula && item.formula.trim() !== "") return item.formula;
@@ -508,6 +560,9 @@
       return "Temel Element";
     }
 
+    /* =========================================================================
+       2. SES EFEKTLERİ (SAF WEB AUDIO SYNTHESIZER)
+       ========================================================================= */
     let soundEnabled = true;
     let audioCtx = null;
 
@@ -575,6 +630,9 @@
       document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
     }
 
+    /* =========================================================================
+       3. GÖRSEL TEMA VE PARÇACIK EFEKT (VFX) MOTORU
+       ========================================================================= */
     function getElementVisualProfile(item) {
       const name = (item.name || "").toLocaleLowerCase("tr-TR");
       const cat = item.cat || "madde";
@@ -637,6 +695,7 @@
       const fxLayer = document.getElementById("canvasFxLayer");
       if (!fxLayer) return;
 
+      // Şok Halka Efekti
       const ring = document.createElement("div");
       ring.style.position = "absolute";
       ring.style.left = `${x}px`;
@@ -656,6 +715,7 @@
       });
       setTimeout(() => ring.remove(), 480);
 
+      // Ateş veya Patlama ise Ekran Sarsıntısı
       if (profile.theme === "fire" || profile.theme === "radioactive") {
         const canvas = document.getElementById("alchemyCanvas");
         canvas.classList.remove("shake-screen");
@@ -666,6 +726,7 @@
         playSound("success");
       }
 
+      // Parçacıklar
       const count = 16;
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
@@ -696,6 +757,9 @@
       }
     }
 
+    /* =========================================================================
+       4. UYGULAMA DURUMU (STATE) VE YEREL HAFIZA (LOCAL STORAGE)
+       ========================================================================= */
     let inventory = [];
     let canvasItems = [];
     let activeCategory = "all";
@@ -734,6 +798,7 @@
         inventory = [...STARTER_ELEMENTS];
       }
 
+      // Başlangıç elementlerinin eksiksiz olduğundan ve her öğenin formülü olduğundan emin ol
       STARTER_ELEMENTS.forEach(s => {
         if (!inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === s.name.toLocaleLowerCase("tr-TR"))) {
           inventory.push({ ...s });
@@ -745,6 +810,9 @@
       });
     }
 
+    /* =========================================================================
+       5. ENVANTER VE SEÇİM PENCERESİ RENDER (FORMÜL ALT YAZILI)
+       ========================================================================= */
     function setCategoryFilter(cat) {
       activeCategory = cat;
       document.querySelectorAll(".cat-tab").forEach(btn => {
@@ -800,6 +868,7 @@
           <span class="text-xs text-slate-400 shrink-0 font-bold">＋</span>
         `;
 
+        // Sürükleme veya Tıklama ile Tuvale Ekleme
         setupSidebarItemInteraction(card, item);
         listEl.appendChild(card);
       });
@@ -852,6 +921,9 @@
       });
     }
 
+    /* =========================================================================
+       6. TUVAL ÜZERİNDE ELEMENT OLUŞTURMA VE SÜRÜKLE-BIRAK MOTORU
+       ========================================================================= */
     function clampCanvasPosition(x, y) {
       const canvas = document.getElementById("alchemyCanvas");
       if (!canvas) return { x: 160, y: 160 };
@@ -952,6 +1024,7 @@
       playSound("spawn");
     }
 
+    // Yan Panelden Sürükleme veya Tıklama
     function setupSidebarItemInteraction(cardEl, itemData) {
       let startX = 0;
       let startY = 0;
@@ -1013,6 +1086,7 @@
               if (spawned) checkAndTriggerMerge(spawned);
             }
           } else {
+            // Sadece tıklandıysa doğrudan tuvalin ortasına ekle
             spawnElementNearCenter(itemData);
             playSound("spawn");
           }
@@ -1025,6 +1099,7 @@
       cardEl.addEventListener("pointerdown", onPointerDown);
     }
 
+    // Tuval Üzerindeki Kartın Sürüklenmesi, Çift Tıklanması ve Birleşmesi
     function setupCanvasCardDrag(record) {
       const el = record.el;
       let offsetX = 0;
@@ -1036,6 +1111,7 @@
         if (e.button !== undefined && e.button !== 0) return;
         e.stopPropagation();
 
+        // Çift tıklama / dokunma ile kopyalama
         const now = Date.now();
         if (now - lastTapTime < 280) {
           spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
@@ -1063,6 +1139,7 @@
           el.style.left = `${clamped.x}px`;
           el.style.top = `${clamped.y}px`;
 
+          // Çöp kutusu vurgusu
           const trash = document.getElementById("trashDropZone");
           const trashRect = trash.getBoundingClientRect();
           const overTrash =
@@ -1074,6 +1151,7 @@
           trash.style.borderColor = overTrash ? "#f43f5e" : "";
           trash.style.transform = overTrash ? "scale(1.08)" : "";
 
+          // En yakın birleşme hedefini bul
           const candidate = findMergeCandidate(record);
           if (highlightedTarget && highlightedTarget !== candidate) {
             highlightedTarget.el.classList.remove("merge-target");
@@ -1098,6 +1176,7 @@
             highlightedTarget = null;
           }
 
+          // Çöp kutusuna bırakıldı mı?
           const trashRect = trash.getBoundingClientRect();
           if (
             upEv.clientX >= trashRect.left &&
@@ -1121,7 +1200,7 @@
 
     function findMergeCandidate(sourceRecord) {
       let best = null;
-      let minDist = 72;
+      let minDist = 72; // Birleşme algılama yarıçapı (mobil dostu)
       for (const other of canvasItems) {
         if (other.id === sourceRecord.id || other.merging) continue;
         const d = Math.hypot(other.x - sourceRecord.x, other.y - sourceRecord.y);
@@ -1140,6 +1219,9 @@
       }
     }
 
+    /* =========================================================================
+       7. SENTEZ MOTORU (YEREL -> FIREBASE -> GEMINI AI) + FORMÜL KAYDI
+       ========================================================================= */
     function createSynthesisPuff(x, y, statusText) {
       const fxLayer = document.getElementById("canvasFxLayer");
       const puff = document.createElement("div");
@@ -1177,6 +1259,7 @@
       const exactKey = [itemA.name.toLocaleLowerCase("tr-TR"), itemB.name.toLocaleLowerCase("tr-TR")].sort().join("_");
       const recipeFormulaString = `${itemA.name} + ${itemB.name}`;
 
+      // 1. Önbellekte tepkimesiz olarak işaretlenmiş mi?
       if (REACTION_CACHE[normKey] === "NO_REACTION") {
         showToast(`"${itemA.name}" ve "${itemB.name}" birleşmiyor.`, "warn");
         playSound("fail");
@@ -1185,6 +1268,7 @@
         return;
       }
 
+      // 2. Yerel Kütüphane Kontrolü (Anında, AI beklemesi olmadan)
       const localMatch = NORMALIZED_RECIPES[normKey] || NORMALIZED_RECIPES[exactKey] || MASTER_RECIPES[exactKey];
       if (localMatch) {
         const resultElement = {
@@ -1195,9 +1279,11 @@
         return;
       }
 
+      // Bulut / Yapay Zekâ Süreci için Duman Efekti Başlat
       const puffEl = createSynthesisPuff(midX, midY, "Kütüphaneye bakılıyor...");
 
       try {
+        // 3. Firebase Realtime Database Kontrolü
         const fbResult = await fetchRecipeFromFirebase(normKey);
         if (fbResult) {
           puffEl.remove();
@@ -1218,6 +1304,7 @@
           return;
         }
 
+        // 4. Gemini Yapay Zekâ Sentezi
         updatePuffStatus(puffEl, "☁️ Yapay zekâ düşünüyor...");
         const aiResult = await askGeminiForRecipe(itemA.name, itemB.name);
         puffEl.remove();
@@ -1276,6 +1363,9 @@
       saveProgressToLocal();
     }
 
+    /* =========================================================================
+       8. FIREBASE VE GEMINI API İŞLEMLERİ
+       ========================================================================= */
     async function fetchRecipeFromFirebase(key) {
       try {
         const url = `${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`;
@@ -1310,7 +1400,7 @@
       const prompt = `Sen bilimsel ve teknolojik bir element birleştirme oyununun sentez motorusun.
 Kullanıcı "${elem1}" ve "${elem2}" maddelerini birleştirdi.
 Kurallar:
-1. Ortaya çıkan şey gerçekçi bir kimyasal bileşik, malzeme, doğa olayı veya teknolojik cihaz olmalıdır.
+1. Ortaya çıkan ��ey gerçekçi bir kimyasal bileşik, malzeme, doğa olayı veya teknolojik cihaz olmalıdır.
 2. ASLA kelimenin başına "Süper, Mega, Büyük, Çift" ekleyerek kısır döngü yapma. Aynı iki şey birleşiyorsa bir üst kavram üret (Örn: Mikroçip + Mikroçip = İşlemci).
 3. Eğer bu iki şeyin birleşmesi tamamen anlamsızsa name alanına "NO_REACTION" yaz.
 4. SADECE geçerli bir JSON döndür:
@@ -1386,6 +1476,9 @@ Kurallar:
       }
     }
 
+    /* =========================================================================
+       9. İPUCU SİSTEMİ, CİHAZ MODU VE MODALLAR
+       ========================================================================= */
     function showRecipeHint() {
       const invNames = new Set(inventory.map(i => i.name.toLocaleLowerCase("tr-TR")));
       const candidates = [];
@@ -1458,6 +1551,7 @@ Kurallar:
         label.textContent = "PC";
       }
 
+      // Ekran boyutu değişince tuvaldeki kartları içeri hizala
       setTimeout(reclampAllCanvasItems, 60);
     }
 
@@ -1518,6 +1612,9 @@ Kurallar:
       showToast("Tüm ilerleme sıfırlandı ve başlangıç elementlerine dönüldü.");
     }
 
+    /* =========================================================================
+       10. BAŞLATMA (INIT)
+       ========================================================================= */
     window.addEventListener("resize", reclampAllCanvasItems);
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -1526,6 +1623,7 @@ Kurallar:
       renderInventory();
       refreshGlobalFormulaCount();
 
+      // Kayıtlı tuval öğelerini geri yükle
       try {
         const savedCanvas = JSON.parse(localStorage.getItem("alchemy_canvas_v3") || "[]");
         if (Array.isArray(savedCanvas) && savedCanvas.length > 0) {
@@ -1537,6 +1635,7 @@ Kurallar:
         }
       } catch (e) {}
 
+      // İlk kez giriliyorsa cihaz seçim penceresini aç
       if (!deviceMode) {
         const devModal = document.getElementById("deviceModal");
         devModal.classList.remove("hidden");
