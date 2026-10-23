@@ -80,6 +80,24 @@
       animation: puffPulse 0.9s infinite ease-in-out;
     }
 
+    /* Görev Tamamlama Flaş Efekti */
+    @keyframes missionFlash {
+      0%, 100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+      50% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.65); }
+    }
+    .mission-flash {
+      animation: missionFlash 0.9s ease-in-out;
+    }
+
+    /* Aktif Görev Nabız */
+    @keyframes missionPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .mission-pulse {
+      animation: missionPulse 1.4s ease-in-out infinite;
+    }
+
     /* Özel Kaydırma Çubuğu */
     ::-webkit-scrollbar {
       width: 6px;
@@ -176,6 +194,22 @@
         <span>Tuvali Temizle</span>
       </button>
     </div>
+  </div>
+
+  <!-- 2.5. GÖREV / HEDEF PANELİ -->
+  <div id="missionPanel" class="w-full bg-slate-900/95 border-b border-slate-800 z-20 shrink-0">
+    <!-- Kompakt Satır (Her Zaman Görünür) -->
+    <div class="px-2.5 sm:px-4 py-1.5 flex items-center gap-1.5">
+      <span class="text-base shrink-0" title="Görevler">🎯</span>
+      <div id="missionCompactRow" class="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto"></div>
+      <button onclick="toggleMissionExpanded()" class="shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-[11px] font-bold flex items-center gap-1 transition active:scale-95">
+        <span id="missionToggleIcon" class="inline-block transition-transform">▼</span>
+        <span class="hidden sm:inline">Detaylar</span>
+      </button>
+    </div>
+
+    <!-- Genişletilmiş Görev Listesi -->
+    <div id="missionExpandedBody" class="hidden px-2.5 sm:px-4 pb-2.5 grid grid-cols-1 md:grid-cols-3 gap-2"></div>
   </div>
 
   <!-- 3. ANA ÇALIŞMA ALANI (TUVAL + SAĞ KÜTÜPHANE PANELİ) -->
@@ -375,7 +409,7 @@
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
     const DEFAULT_GEMINI_KEY = "AIzaSyDdlKNwxzVBBQmpsg0YsYTLhHM--PSi6VY";
 
-    // Temel Başlangıç Elementleri (Altlarında Kimyasal Sembol ve Atom No yazar)
+    // Temel Başlangıç Elementleri
     const STARTER_ELEMENTS = [
       { name: "Hidrojen", emoji: "💧", cat: "element", formula: "H • Atom No: 1", desc: "Evrenin en hafif ve en bol elementi" },
       { name: "Oksijen", emoji: "💨", cat: "element", formula: "O₂ • Atom No: 8", desc: "Yaşam ve yanma için temel gaz" },
@@ -395,7 +429,6 @@
 
     // Zenginleştirilmiş Yerleşik Formül Havuzu
     const MASTER_RECIPES = {
-      // Kendiyle Birleşen Temel Elementler
       "hidrojen_hidrojen": { name: "Helyum (He)", emoji: "🎈", cat: "element", formula: "Hidrojen + Hidrojen (Füzyon)" },
       "helyum (he)_helyum (he)": { name: "Yıldız Çekirdeği", emoji: "🌟", cat: "enerji", formula: "Helyum + Helyum" },
       "oksijen_oksijen": { name: "Ozon (O₃)", emoji: "🛡️", cat: "madde", formula: "Oksijen + Oksijen" },
@@ -407,7 +440,6 @@
       "elektrik_elektrik": { name: "Yıldırım", emoji: "🌩️", cat: "enerji", formula: "Elektrik + Elektrik" },
       "ışık_ışık": { name: "Lazer", emoji: "🔦", cat: "enerji", formula: "Işık + Işık" },
 
-      // Temel Bileşikler (Su, Hava, Asit, Metal Alaşımlar)
       "hidrojen_oksijen": { name: "Su (H₂O)", emoji: "🌊", cat: "madde", formula: "Hidrojen + Oksijen" },
       "su (h₂o)_su (h₂o)": { name: "Okyanus", emoji: "🌏", cat: "madde", formula: "Su + Su" },
       "su (h₂o)_ateş": { name: "Buhar", emoji: "♨️", cat: "madde", formula: "Su + Ateş" },
@@ -422,7 +454,6 @@
       "azot_hidrojen": { name: "Amonyak (NH₃)", emoji: "🧪", cat: "madde", formula: "Azot + Hidrojen" },
       "amonyak (nh₃)_oksijen": { name: "Nitrik Asit", emoji: "⚗️", cat: "madde", formula: "Amonyak + Oksijen" },
 
-      // Metaller, Cam ve Yapı Malzemeleri
       "demir_karbon": { name: "Çelik", emoji: "⚔️", cat: "madde", formula: "Demir + Karbon" },
       "demir_oksijen": { name: "Pas (Demir Oksit)", emoji: "🧱", cat: "madde", formula: "Demir + Oksijen" },
       "demir_ateş": { name: "Erimiş Metal", emoji: "🌋", cat: "madde", formula: "Demir + Ateş" },
@@ -435,7 +466,6 @@
       "kum (silika)_su (h₂o)": { name: "Kil", emoji: "🏺", cat: "madde", formula: "Kum + Su" },
       "kil_ateş": { name: "Seramik", emoji: "🧱", cat: "madde", formula: "Kil + Ateş" },
 
-      // Elektrik & Elektronik Temelleri
       "bakır_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır + Elektrik" },
       "bakır_ateş": { name: "Bakır Tel", emoji: "➰", cat: "madde", formula: "Bakır + Ateş" },
       "bakır tel_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır Tel + Elektrik" },
@@ -445,7 +475,6 @@
       "lityum_karbon": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Karbon" },
       "batarya_batarya": { name: "Güç İstasyonu", emoji: "⚡", cat: "enerji", formula: "Batarya + Batarya" },
 
-      // Yarı İletkenler, Çip, Ekran ve Bilgisayar Mimarisi
       "silisyum_elektrik": { name: "Transistör", emoji: "🎛️", cat: "elektronik", formula: "Silisyum + Elektrik" },
       "silisyum_ateş": { name: "Silikon Plaka", emoji: "💿", cat: "elektronik", formula: "Silisyum + Ateş" },
       "transistör_transistör": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Transistör + Transistör" },
@@ -457,7 +486,6 @@
       "işlemci (cpu)_anakart": { name: "Bilgisayar", emoji: "💻", cat: "elektronik", formula: "İşlemci (CPU) + Anakart" },
       "işlemci (cpu)_ışık": { name: "Ekran Kartı (GPU)", emoji: "🎮", cat: "elektronik", formula: "İşlemci (CPU) + Işık" },
 
-      // Ekran, Akıllı Telefon ve Tablet Ağacı
       "cam_ışık": { name: "Ekran Paneli", emoji: "🖥️", cat: "elektronik", formula: "Cam + Işık" },
       "cam_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Cam + Mikroçip" },
       "ekran paneli_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Ekran Paneli + Mikroçip" },
@@ -468,7 +496,6 @@
       "tablet_işlemci (cpu)": { name: "Dizüstü Bilgisayar", emoji: "💻", cat: "elektronik", formula: "Tablet + İşlemci (CPU)" },
       "akıllı telefon_zaman": { name: "Akıllı Saat", emoji: "⌚", cat: "elektronik", formula: "Akıllı Telefon + Zaman" },
 
-      // Yazılım, İnternet, Yapay Zekâ ve Robotik
       "işlemci (cpu)_elektrik": { name: "Yazılım Kodu", emoji: "👨‍💻", cat: "elektronik", formula: "İşlemci (CPU) + Elektrik" },
       "bilgisayar_bilgisayar": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Bilgisayar" },
       "bilgisayar_fiber optik": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Fiber Optik" },
@@ -480,7 +507,6 @@
       "robot_yapay zekâ (ai)": { name: "İnsansı Robot (Android)", emoji: "🦿", cat: "elektronik", formula: "Robot + Yapay Zekâ (AI)" },
       "bilgisayar_lazer": { name: "Kuantum Bilgisayar", emoji: "⚛️", cat: "elektronik", formula: "Bilgisayar + Lazer" },
 
-      // Nükleer & Uzay Teknolojisi
       "uranyum_uranyum": { name: "Kritik Kütle", emoji: "☢️", cat: "enerji", formula: "Uranyum + Uranyum" },
       "kritik kütle_kritik kütle": { name: "Nükleer Patlama", emoji: "🍄", cat: "enerji", formula: "Kritik Kütle + Kritik Kütle" },
       "uranyum_su (h₂o)": { name: "Nükleer Reaktör", emoji: "🏭", cat: "enerji", formula: "Uranyum + Su" },
@@ -490,7 +516,6 @@
       "uzay gemisi_güneş": { name: "Uzay İstasyonu", emoji: "🛰️", cat: "elektronik", formula: "Uzay Gemisi + Güneş" },
       "ışık_silisyum": { name: "Güneş Paneli", emoji: "☀️", cat: "enerji", formula: "Işık + Silisyum" },
 
-      // Organik Yaşam ve Doğa
       "su (h₂o)_karbon": { name: "Organik Molekül", emoji: "🧬", cat: "madde", formula: "Su + Karbon" },
       "organik molekül_elektrik": { name: "Hücre", emoji: "🦠", cat: "madde", formula: "Organik Molekül + Elektrik" },
       "organik molekül_zaman": { name: "Yaşam", emoji: "🌱", cat: "madde", formula: "Organik Molekül + Zaman" },
@@ -501,6 +526,45 @@
       "hücre_zaman": { name: "İnsan", emoji: "🧑", cat: "madde", formula: "Hücre + Zaman" },
       "insan_bilgisayar": { name: "Siborg (Cyborg)", emoji: "🦾", cat: "elektronik", formula: "İnsan + Bilgisayar" }
     };
+
+    /* =========================================================================
+       GÖREV / HEDEF SİSTEMİ VERİSİ
+       ========================================================================= */
+    const MISSIONS = [
+      {
+        id: "bio",
+        name: "Biyolojik Yaşam",
+        emoji: "🌱",
+        steps: [
+          { name: "Su (H₂O)", label: "Su Oluştur" },
+          { name: "Yaşam", label: "Yaşamı Başlat" },
+          { name: "Hücre", label: "Hücre Oluştur" },
+          { name: "İnsan", label: "İnsan Oluştur" }
+        ]
+      },
+      {
+        id: "industry",
+        name: "Sanayi Devrimi",
+        emoji: "🏭",
+        steps: [
+          { name: "Çelik", label: "Çelik Üret" },
+          { name: "Kum (Silika)", label: "Kum Üret" },
+          { name: "Cam", label: "Cam Üret" },
+          { name: "Nükleer Enerji", label: "Nükleer Enerji Üret" }
+        ]
+      },
+      {
+        id: "tech",
+        name: "Elektronik ve Bilişim",
+        emoji: "💻",
+        steps: [
+          { name: "Transistör", label: "Transistör Üret" },
+          { name: "İşlemci (CPU)", label: "İşlemci Üret" },
+          { name: "Bilgisayar", label: "Bilgisayar Üret" },
+          { name: "Yapay Zekâ (AI)", label: "Yapay Zekâ Oluştur" }
+        ]
+      }
+    ];
 
     const NORMALIZED_RECIPES = {};
     const REACTION_CACHE = {};
@@ -519,7 +583,7 @@
       const clean = (s) => (s || "")
         .toLocaleLowerCase("tr-TR")
         .replace(/\([^)]*\)/g, "")
-        .replace(/[.#$[\]/()]/g, "")
+        .replace(/[.#$\[\]\/()]/g, "")
         .trim()
         .replace(/\s+/g, " ");
       return [clean(a), clean(b)].sort().join("_");
@@ -538,7 +602,6 @@
           if (!val.formula) {
             val.formula = `${p1} + ${p2}`;
           }
-          // Hem tam anahtar hem parantezsiz anahtar olarak kaydet
           const normKey = normalizeKey(parts[0], parts[1]);
           NORMALIZED_RECIPES[normKey] = val;
           const exactKey = [parts[0].trim().toLocaleLowerCase("tr-TR"), parts[1].trim().toLocaleLowerCase("tr-TR")].sort().join("_");
@@ -695,7 +758,6 @@
       const fxLayer = document.getElementById("canvasFxLayer");
       if (!fxLayer) return;
 
-      // Şok Halka Efekti
       const ring = document.createElement("div");
       ring.style.position = "absolute";
       ring.style.left = `${x}px`;
@@ -715,7 +777,6 @@
       });
       setTimeout(() => ring.remove(), 480);
 
-      // Ateş veya Patlama ise Ekran Sarsıntısı
       if (profile.theme === "fire" || profile.theme === "radioactive") {
         const canvas = document.getElementById("alchemyCanvas");
         canvas.classList.remove("shake-screen");
@@ -726,7 +787,6 @@
         playSound("success");
       }
 
-      // Parçacıklar
       const count = 16;
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
@@ -765,6 +825,8 @@
     let activeCategory = "all";
     let deviceMode = localStorage.getItem("alchemy_device_mode") || "";
     let nextCanvasId = 1;
+    let missionProgress = { bio: 0, industry: 0, tech: 0 };
+    let missionExpanded = false;
 
     function getFirebaseBaseUrl() {
       return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, "");
@@ -786,6 +848,12 @@
       } catch (e) {}
     }
 
+    function saveMissionProgress() {
+      try {
+        localStorage.setItem("alchemy_missions_v1", JSON.stringify(missionProgress));
+      } catch (e) {}
+    }
+
     function loadProgressFromLocal() {
       try {
         const savedInv = JSON.parse(localStorage.getItem("alchemy_inventory_v3") || "null");
@@ -798,7 +866,6 @@
         inventory = [...STARTER_ELEMENTS];
       }
 
-      // Başlangıç elementlerinin eksiksiz olduğundan ve her öğenin formülü olduğundan emin ol
       STARTER_ELEMENTS.forEach(s => {
         if (!inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === s.name.toLocaleLowerCase("tr-TR"))) {
           inventory.push({ ...s });
@@ -808,6 +875,225 @@
       inventory.forEach(item => {
         item.formula = getElementFormulaText(item);
       });
+    }
+
+    /* =========================================================================
+       GÖREV SİSTEMİ MANTIĞI
+       ========================================================================= */
+    function initializeMissionProgress() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("alchemy_missions_v1") || "null");
+        if (saved && typeof saved === "object") {
+          missionProgress = {
+            bio: saved.bio || 0,
+            industry: saved.industry || 0,
+            tech: saved.tech || 0
+          };
+        }
+      } catch (e) {
+        missionProgress = { bio: 0, industry: 0, tech: 0 };
+      }
+
+      // Mevcut envanterdeki elementlere göre görevleri otomatik tamamla
+      MISSIONS.forEach(mission => {
+        let completed = missionProgress[mission.id] || 0;
+        while (completed < mission.steps.length) {
+          const step = mission.steps[completed];
+          const has = inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === step.name.toLocaleLowerCase("tr-TR"));
+          if (has) completed++;
+          else break;
+        }
+        missionProgress[mission.id] = completed;
+      });
+
+      saveMissionProgress();
+    }
+
+    function checkMissionProgress(newElementName) {
+      const lower = (newElementName || "").toLocaleLowerCase("tr-TR");
+      let anyChanged = false;
+
+      MISSIONS.forEach(mission => {
+        let completed = missionProgress[mission.id] || 0;
+        if (completed >= mission.steps.length) return;
+
+        const currentStep = mission.steps[completed];
+        if (currentStep.name.toLocaleLowerCase("tr-TR") !== lower) return;
+
+        const justCompletedStep = currentStep;
+        completed++;
+
+        // Envanterde zaten olan bir sonraki adımları otomatik tamamla
+        while (completed < mission.steps.length) {
+          const nextStep = mission.steps[completed];
+          const has = inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === nextStep.name.toLocaleLowerCase("tr-TR"));
+          if (has) completed++;
+          else break;
+        }
+
+        missionProgress[mission.id] = completed;
+        anyChanged = true;
+
+        // Bildirimler
+        showToast(`✅ Görev Tamamlandı: ${mission.emoji} ${justCompletedStep.label}`, "mission");
+        playSound("success");
+
+        if (completed >= mission.steps.length) {
+          setTimeout(() => celebrateMissionComplete(mission), 1400);
+        } else {
+          const nextStep = mission.steps[completed];
+          setTimeout(() => {
+            showToast(`🎯 Bir sonraki hedef: ${nextStep.label}`, "mission");
+          }, 1400);
+        }
+
+        // Panel flaş efekti
+        const panel = document.getElementById("missionPanel");
+        if (panel) {
+          panel.classList.remove("mission-flash");
+          void panel.offsetWidth;
+          panel.classList.add("mission-flash");
+        }
+      });
+
+      if (anyChanged) {
+        saveMissionProgress();
+        renderMissionPanel();
+      }
+    }
+
+    function celebrateMissionComplete(mission) {
+      // Ekran flaşı
+      const overlay = document.createElement("div");
+      overlay.style.cssText = "position:fixed;inset:0;background:rgba(16,185,129,0.18);z-index:70;pointer-events:none;transition:opacity 0.9s ease-out;";
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => { overlay.style.opacity = "0"; });
+      setTimeout(() => overlay.remove(), 950);
+
+      // Zafer toast'u
+      const container = document.getElementById("toastContainer");
+      if (container) {
+        const el = document.createElement("div");
+        el.className = "px-5 py-3 rounded-2xl border-2 border-yellow-300 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-sm font-extrabold shadow-2xl shadow-amber-500/40";
+        el.textContent = `🏆 TEBRİKLER! "${mission.name}" aşaması tamamen tamamlandı!`;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(-8px)";
+          setTimeout(() => el.remove(), 400);
+        }, 4200);
+      }
+
+      playSound("success");
+      setTimeout(() => playSound("success"), 180);
+      setTimeout(() => playSound("success"), 360);
+    }
+
+    function renderMissionPanel() {
+      const compactRow = document.getElementById("missionCompactRow");
+      const expandedBody = document.getElementById("missionExpandedBody");
+      if (!compactRow) return;
+
+      // Kompakt kartlar
+      compactRow.innerHTML = "";
+      MISSIONS.forEach((mission, idx) => {
+        const completed = missionProgress[mission.id] || 0;
+        const total = mission.steps.length;
+        const isDone = completed >= total;
+        const currentStep = isDone ? null : mission.steps[completed];
+
+        const card = document.createElement("div");
+        card.className = `flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] shrink-0 whitespace-nowrap transition ${
+          isDone
+            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-200"
+            : "bg-cyan-500/15 border-cyan-500/50 text-cyan-100 ring-1 ring-cyan-500/30"
+        }`;
+        card.title = `${mission.name} - ${isDone ? "Tamamlandı" : currentStep.label}`;
+
+        const dotsHtml = mission.steps.map((s, i) => {
+          let dotClass = "bg-slate-600";
+          if (i < completed) dotClass = "bg-emerald-400";
+          else if (i === completed) dotClass = "bg-cyan-400 mission-pulse";
+          return `<span class="inline-block w-1.5 h-1.5 rounded-full ${dotClass}"></span>`;
+        }).join("");
+
+        card.innerHTML = `
+          <span class="text-sm shrink-0">${isDone ? "✅" : mission.emoji}</span>
+          <span class="font-extrabold hidden xs:inline">${idx + 1}.</span>
+          <span class="font-bold">${mission.name}</span>
+          <span class="hidden md:inline text-[10px] opacity-80 font-normal">${isDone ? "Tamamlandı" : "• " + currentStep.label}</span>
+          <span class="flex items-center gap-0.5 ml-0.5">${dotsHtml}</span>
+          <span class="font-mono-code text-[10px] opacity-70">${completed}/${total}</span>
+        `;
+
+        card.onclick = () => {
+          if (!missionExpanded) toggleMissionExpanded();
+          const target = document.getElementById(`missionCard-${mission.id}`);
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        };
+
+        compactRow.appendChild(card);
+      });
+
+      // Genişletilmiş kartlar
+      if (!expandedBody) return;
+      expandedBody.innerHTML = "";
+      MISSIONS.forEach((mission, idx) => {
+        const completed = missionProgress[mission.id] || 0;
+        const total = mission.steps.length;
+        const isDone = completed >= total;
+
+        const card = document.createElement("div");
+        card.id = `missionCard-${mission.id}`;
+        card.className = `p-2.5 rounded-xl border transition ${
+          isDone
+            ? "bg-emerald-950/40 border-emerald-500/50"
+            : "bg-slate-800/60 border-slate-700"
+        }`;
+
+        const stepsHtml = mission.steps.map((s, i) => {
+          const stepDone = i < completed;
+          const stepActive = i === completed;
+          return `
+            <div class="flex items-center gap-2 px-2 py-1 rounded-md text-[11px] ${
+              stepDone ? "bg-emerald-500/10 text-emerald-300"
+                : stepActive ? "bg-cyan-500/20 text-cyan-100 font-bold ring-1 ring-cyan-500/40"
+                : "text-slate-500"
+            }">
+              <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold shrink-0 ${
+                stepDone ? "bg-emerald-500 text-slate-950"
+                  : stepActive ? "bg-cyan-500 text-slate-950"
+                  : "bg-slate-700 text-slate-500"
+              }">${stepDone ? "✓" : (i + 1)}</span>
+              <span class="truncate">${s.label}</span>
+              ${stepActive ? '<span class="ml-auto text-[9px] text-cyan-300 font-extrabold tracking-wider">▶ AKTİF</span>' : ""}
+            </div>
+          `;
+        }).join("");
+
+        card.innerHTML = `
+          <div class="flex items-center gap-1.5 mb-2">
+            <span class="text-base">${mission.emoji}</span>
+            <span class="text-xs font-extrabold text-white">Amaç ${idx + 1}: ${mission.name}</span>
+            ${isDone ? '<span class="ml-auto text-[10px] text-emerald-400 font-extrabold">✓ TAMAMLANDI</span>' : `<span class="ml-auto text-[10px] text-slate-400 font-mono-code">${completed}/${total}</span>`}
+          </div>
+          <div class="space-y-1">${stepsHtml}</div>
+        `;
+        expandedBody.appendChild(card);
+      });
+    }
+
+    function toggleMissionExpanded() {
+      missionExpanded = !missionExpanded;
+      const body = document.getElementById("missionExpandedBody");
+      const icon = document.getElementById("missionToggleIcon");
+      if (missionExpanded) {
+        body.classList.remove("hidden");
+        if (icon) icon.style.transform = "rotate(180deg)";
+      } else {
+        body.classList.add("hidden");
+        if (icon) icon.style.transform = "rotate(0deg)";
+      }
     }
 
     /* =========================================================================
@@ -868,7 +1154,6 @@
           <span class="text-xs text-slate-400 shrink-0 font-bold">＋</span>
         `;
 
-        // Sürükleme veya Tıklama ile Tuvale Ekleme
         setupSidebarItemInteraction(card, item);
         listEl.appendChild(card);
       });
@@ -1024,7 +1309,6 @@
       playSound("spawn");
     }
 
-    // Yan Panelden Sürükleme veya Tıklama
     function setupSidebarItemInteraction(cardEl, itemData) {
       let startX = 0;
       let startY = 0;
@@ -1086,7 +1370,6 @@
               if (spawned) checkAndTriggerMerge(spawned);
             }
           } else {
-            // Sadece tıklandıysa doğrudan tuvalin ortasına ekle
             spawnElementNearCenter(itemData);
             playSound("spawn");
           }
@@ -1099,7 +1382,6 @@
       cardEl.addEventListener("pointerdown", onPointerDown);
     }
 
-    // Tuval Üzerindeki Kartın Sürüklenmesi, Çift Tıklanması ve Birleşmesi
     function setupCanvasCardDrag(record) {
       const el = record.el;
       let offsetX = 0;
@@ -1111,7 +1393,6 @@
         if (e.button !== undefined && e.button !== 0) return;
         e.stopPropagation();
 
-        // Çift tıklama / dokunma ile kopyalama
         const now = Date.now();
         if (now - lastTapTime < 280) {
           spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
@@ -1139,7 +1420,6 @@
           el.style.left = `${clamped.x}px`;
           el.style.top = `${clamped.y}px`;
 
-          // Çöp kutusu vurgusu
           const trash = document.getElementById("trashDropZone");
           const trashRect = trash.getBoundingClientRect();
           const overTrash =
@@ -1151,7 +1431,6 @@
           trash.style.borderColor = overTrash ? "#f43f5e" : "";
           trash.style.transform = overTrash ? "scale(1.08)" : "";
 
-          // En yakın birleşme hedefini bul
           const candidate = findMergeCandidate(record);
           if (highlightedTarget && highlightedTarget !== candidate) {
             highlightedTarget.el.classList.remove("merge-target");
@@ -1176,7 +1455,6 @@
             highlightedTarget = null;
           }
 
-          // Çöp kutusuna bırakıldı mı?
           const trashRect = trash.getBoundingClientRect();
           if (
             upEv.clientX >= trashRect.left &&
@@ -1200,7 +1478,7 @@
 
     function findMergeCandidate(sourceRecord) {
       let best = null;
-      let minDist = 72; // Birleşme algılama yarıçapı (mobil dostu)
+      let minDist = 72;
       for (const other of canvasItems) {
         if (other.id === sourceRecord.id || other.merging) continue;
         const d = Math.hypot(other.x - sourceRecord.x, other.y - sourceRecord.y);
@@ -1259,7 +1537,6 @@
       const exactKey = [itemA.name.toLocaleLowerCase("tr-TR"), itemB.name.toLocaleLowerCase("tr-TR")].sort().join("_");
       const recipeFormulaString = `${itemA.name} + ${itemB.name}`;
 
-      // 1. Önbellekte tepkimesiz olarak işaretlenmiş mi?
       if (REACTION_CACHE[normKey] === "NO_REACTION") {
         showToast(`"${itemA.name}" ve "${itemB.name}" birleşmiyor.`, "warn");
         playSound("fail");
@@ -1268,7 +1545,6 @@
         return;
       }
 
-      // 2. Yerel Kütüphane Kontrolü (Anında, AI beklemesi olmadan)
       const localMatch = NORMALIZED_RECIPES[normKey] || NORMALIZED_RECIPES[exactKey] || MASTER_RECIPES[exactKey];
       if (localMatch) {
         const resultElement = {
@@ -1279,11 +1555,9 @@
         return;
       }
 
-      // Bulut / Yapay Zekâ Süreci için Duman Efekti Başlat
       const puffEl = createSynthesisPuff(midX, midY, "Kütüphaneye bakılıyor...");
 
       try {
-        // 3. Firebase Realtime Database Kontrolü
         const fbResult = await fetchRecipeFromFirebase(normKey);
         if (fbResult) {
           puffEl.remove();
@@ -1304,7 +1578,6 @@
           return;
         }
 
-        // 4. Gemini Yapay Zekâ Sentezi
         updatePuffStatus(puffEl, "☁️ Yapay zekâ düşünüyor...");
         const aiResult = await askGeminiForRecipe(itemA.name, itemB.name);
         puffEl.remove();
@@ -1354,6 +1627,8 @@
           `🎉 Yeni Keşif: ${finalItem.emoji || "🧪"} ${finalItem.name} (${formulaText})`,
           isAiDiscovery ? "ai" : "new"
         );
+        // Görev kontrolü - keşif bildiriminden kısa süre sonra
+        setTimeout(() => checkMissionProgress(finalItem.name), 450);
       }
 
       const spawned = spawnElementOnCanvas(finalItem, x, y);
@@ -1400,7 +1675,7 @@
       const prompt = `Sen bilimsel ve teknolojik bir element birleştirme oyununun sentez motorusun.
 Kullanıcı "${elem1}" ve "${elem2}" maddelerini birleştirdi.
 Kurallar:
-1. Ortaya çıkan ��ey gerçekçi bir kimyasal bileşik, malzeme, doğa olayı veya teknolojik cihaz olmalıdır.
+1. Ortaya çıkan şey gerçekçi bir kimyasal bileşik, malzeme, doğa olayı veya teknolojik cihaz olmalıdır.
 2. ASLA kelimenin başına "Süper, Mega, Büyük, Çift" ekleyerek kısır döngü yapma. Aynı iki şey birleşiyorsa bir üst kavram üret (Örn: Mikroçip + Mikroçip = İşlemci).
 3. Eğer bu iki şeyin birleşmesi tamamen anlamsızsa name alanına "NO_REACTION" yaz.
 4. SADECE geçerli bir JSON döndür:
@@ -1517,6 +1792,7 @@ Kurallar:
       if (type === "ai") style = "bg-purple-950/95 border-purple-400 text-purple-100";
       if (type === "warn") style = "bg-rose-950/95 border-rose-500/70 text-rose-200";
       if (type === "hint") style = "bg-amber-950/95 border-amber-400 text-amber-100";
+      if (type === "mission") style = "bg-emerald-700 border-emerald-300 text-white shadow-emerald-500/50";
 
       el.className = `px-4 py-2 rounded-2xl border-2 text-xs sm:text-sm font-bold shadow-2xl transition-all duration-300 ${style}`;
       el.textContent = msg;
@@ -1526,7 +1802,7 @@ Kurallar:
         el.style.opacity = "0";
         el.style.transform = "translateY(-8px)";
         setTimeout(() => el.remove(), 300);
-      }, 3200);
+      }, 3400);
     }
 
     function applyDeviceModeUI(mode) {
@@ -1551,7 +1827,6 @@ Kurallar:
         label.textContent = "PC";
       }
 
-      // Ekran boyutu değişince tuvaldeki kartları içeri hizala
       setTimeout(reclampAllCanvasItems, 60);
     }
 
@@ -1605,9 +1880,13 @@ Kurallar:
     function resetAllProgress() {
       localStorage.removeItem("alchemy_inventory_v3");
       localStorage.removeItem("alchemy_canvas_v3");
+      localStorage.removeItem("alchemy_missions_v1");
       clearCanvas();
       inventory = [...STARTER_ELEMENTS];
+      missionProgress = { bio: 0, industry: 0, tech: 0 };
+      saveMissionProgress();
       renderInventory();
+      renderMissionPanel();
       closeSettingsModal();
       showToast("Tüm ilerleme sıfırlandı ve başlangıç elementlerine dönüldü.");
     }
@@ -1620,10 +1899,11 @@ Kurallar:
     window.addEventListener("DOMContentLoaded", () => {
       prepareMasterRecipes();
       loadProgressFromLocal();
+      initializeMissionProgress();
       renderInventory();
+      renderMissionPanel();
       refreshGlobalFormulaCount();
 
-      // Kayıtlı tuval öğelerini geri yükle
       try {
         const savedCanvas = JSON.parse(localStorage.getItem("alchemy_canvas_v3") || "[]");
         if (Array.isArray(savedCanvas) && savedCanvas.length > 0) {
@@ -1635,7 +1915,6 @@ Kurallar:
         }
       } catch (e) {}
 
-      // İlk kez giriliyorsa cihaz seçim penceresini aç
       if (!deviceMode) {
         const devModal = document.getElementById("deviceModal");
         devModal.classList.remove("hidden");
