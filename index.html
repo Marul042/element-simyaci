@@ -415,7 +415,7 @@
           <p class="text-[11px] text-slate-400">Hangi sağlayıcı kullanıldı, istek ve yanıt neydi?</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="closeActivityLogModal(); openSettingsModal();" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold transition flex items-center gap-1" title="Sistem Ayarları">
+          <button id="activitySettingsButton" onclick="closeActivityLogModal(); openSettingsModal();" class="hidden px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold transition flex items-center gap-1" title="Sistem Ayarları">
             ⚙️ Ayarlar
           </button>
           <button type="button" onclick="closeActivityLogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center" aria-label="Kapat">✕</button>
@@ -430,8 +430,27 @@
       </form>
 
       <section id="activityLogContentView" class="hidden min-h-0 flex-1 flex flex-col">
-        <p id="activityLogStatus" class="px-4 py-2 text-xs text-slate-400"></p>
-        <ol id="activityLogList" class="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-800 px-4"></ol>
+        <div class="px-4 pt-3 flex gap-2">
+          <button id="activityLogTab" onclick="showActivityLogTab('log')" class="px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 text-xs font-bold">İşlem Günlüğü</button>
+          <button id="aiTestTab" onclick="showActivityLogTab('chat')" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold">🤖 Yapay Zekâ Testi</button>
+        </div>
+        <div id="activityLogPanel" class="min-h-0 flex-1 flex flex-col">
+          <p id="activityLogStatus" class="px-4 py-2 text-xs text-slate-400"></p>
+          <ol id="activityLogList" class="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-800 px-4"></ol>
+        </div>
+        <section id="aiTestPanel" class="hidden min-h-0 flex-1 flex-col p-4 gap-3">
+          <label for="aiTestModel" class="text-xs font-semibold text-slate-300">Model</label>
+          <select id="aiTestModel" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none">
+            <option value="auto">Otomatik (tüm modelleri sırayla dene)</option>
+          </select>
+          <div id="aiTestMessages" aria-live="polite" class="min-h-0 flex-1 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+            <p class="text-xs text-slate-500">Bir model seçip mesaj göndererek bağlantıyı deneyin.</p>
+          </div>
+          <form onsubmit="sendAiTestMessage(event)" class="flex gap-2">
+            <input id="aiTestInput" type="text" maxlength="2000" placeholder="Yapay zekâya mesaj yaz..." class="min-w-0 flex-1 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <button id="aiTestSendButton" type="submit" class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 text-sm font-bold">Gönder</button>
+          </form>
+        </section>
       </section>
     </div>
   </div>
@@ -746,6 +765,8 @@
     let missionExpanded = false;
     let activityLogHoldTimer = null;
     let activityLogRefreshTimer = null;
+    let aiTestMessages = [];
+    let aiTestSending = false;
     const ACTIVITY_LOG_PASSWORD = "Marul";
     const ACTIVITY_LOG_LIMIT = 50;
     const LOCAL_ACTIVITY_KEY = "alchemy_local_activity";
@@ -770,6 +791,7 @@
       const modal = document.getElementById("activityLogModal");
       document.getElementById("activityPasswordView").classList.remove("hidden");
       document.getElementById("activityLogContentView").classList.add("hidden");
+      document.getElementById("activitySettingsButton").classList.add("hidden");
       document.getElementById("activityPasswordError").classList.add("hidden");
       document.getElementById("activityLogPassword").value = "";
       modal.classList.remove("hidden"); modal.classList.add("flex");
@@ -791,10 +813,117 @@
       }
       document.getElementById("activityPasswordView").classList.add("hidden");
       document.getElementById("activityLogContentView").classList.remove("hidden");
+      document.getElementById("activitySettingsButton").classList.remove("hidden");
       document.getElementById("activityLogStatus").textContent = "Son işlemler yükleniyor...";
       await loadSharedActivity();
       if (activityLogRefreshTimer) clearInterval(activityLogRefreshTimer);
       activityLogRefreshTimer = window.setInterval(loadSharedActivity, 10000);
+    }
+
+    function showActivityLogTab(tab) {
+      const showChat = tab === "chat";
+      document.getElementById("activityLogPanel").classList.toggle("hidden", showChat);
+      document.getElementById("aiTestPanel").classList.toggle("hidden", !showChat);
+      document.getElementById("aiTestPanel").classList.toggle("flex", showChat);
+      document.getElementById("activityLogTab").className = showChat
+        ? "px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold"
+        : "px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 text-xs font-bold";
+      document.getElementById("aiTestTab").className = showChat
+        ? "px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 text-xs font-bold"
+        : "px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold";
+    }
+
+    function renderAiTestMessages() {
+      const container = document.getElementById("aiTestMessages");
+      container.replaceChildren();
+      for (const message of aiTestMessages) {
+        const bubble = document.createElement("p");
+        bubble.className = `rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${message.role === "user" ? "ml-8 bg-cyan-500/15 text-cyan-100" : message.role === "error" ? "mr-8 bg-rose-500/10 text-rose-200" : "mr-8 bg-slate-800 text-slate-100"}`;
+        const speaker = message.role === "user" ? "Sen" : message.role === "error" ? "Hata" : `Yapay zekâ${message.model ? ` · ${message.model}` : ""}`;
+        bubble.textContent = `${speaker}: ${message.content}`;
+        container.appendChild(bubble);
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function requestAiChat(provider, model, messages) {
+      const proxyUrl = getAiProxyUrl();
+      if (!proxyUrl) throw new Error("Cloudflare Worker URL'si ayarlanmamış.");
+      let url, payload;
+      if (provider === "groq") {
+        url = `${proxyUrl}/api/groq`;
+        payload = { model, messages: messages.map(({ role, content }) => ({ role, content })), temperature: 0.7, max_tokens: 800 };
+      } else {
+        url = `${proxyUrl}/api/gemini/${encodeURIComponent(model)}`;
+        payload = {
+          contents: messages.map(({ role, content }) => ({
+            role: role === "assistant" ? "model" : "user",
+            parts: [{ text: content }]
+          })),
+          generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+        };
+      }
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const responseText = await response.text();
+      let data;
+      try { data = JSON.parse(responseText); }
+      catch (error) { data = null; }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}${responseText ? `: ${responseText.slice(0, 300)}` : ""}`);
+      }
+      const answer = provider === "groq"
+        ? data?.choices?.[0]?.message?.content
+        : data?.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("");
+      if (typeof answer !== "string" || !answer.trim()) throw new Error("Model boş yanıt verdi.");
+      return answer.trim();
+    }
+
+    async function sendAiTestMessage(event) {
+      event.preventDefault();
+      if (aiTestSending) return;
+      const input = document.getElementById("aiTestInput");
+      const content = input.value.trim();
+      if (!content) return;
+      const modelChoice = document.getElementById("aiTestModel").value;
+      aiTestMessages.push({ role: "user", content });
+      input.value = "";
+      renderAiTestMessages();
+      aiTestSending = true;
+      document.getElementById("aiTestSendButton").disabled = true;
+      try {
+        const conversation = aiTestMessages.filter(message => message.role === "user" || message.role === "assistant");
+        const candidates = modelChoice === "auto"
+          ? [
+              ...GROQ_MODEL_PRIORITY.map(model => ({ provider: "groq", model })),
+              ...GEMINI_MODEL_PRIORITY.map(model => ({ provider: "gemini", model }))
+            ]
+          : [{ provider: modelChoice.startsWith("groq:") ? "groq" : "gemini", model: modelChoice.slice(modelChoice.indexOf(":") + 1) }];
+        const errors = [];
+        let answer = null;
+        let usedModel = null;
+        for (const candidate of candidates) {
+          try {
+            answer = await requestAiChat(candidate.provider, candidate.model, conversation);
+            usedModel = `${candidate.provider === "groq" ? "Groq" : "Gemini"} · ${candidate.model}`;
+            break;
+          } catch (error) {
+            errors.push(`${candidate.model}: ${error.message}`);
+            if (modelChoice !== "auto") throw error;
+          }
+        }
+        if (!answer) throw new Error(`Hiçbir model yanıt vermedi. ${errors.join(" | ")}`);
+        aiTestMessages.push({ role: "assistant", content: answer, model: usedModel });
+      } catch (error) {
+        aiTestMessages.push({ role: "error", content: error.message });
+      } finally {
+        aiTestSending = false;
+        document.getElementById("aiTestSendButton").disabled = false;
+        renderAiTestMessages();
+      }
     }
 
     function getActivityBrowserName() {
@@ -1497,6 +1626,18 @@
       "gemini-2.5-flash", 
       "gemini-2.0-flash"
     ];
+    for (const model of GROQ_MODEL_PRIORITY) {
+      const option = document.createElement("option");
+      option.value = `groq:${model}`;
+      option.textContent = `Groq · ${model}`;
+      document.getElementById("aiTestModel").appendChild(option);
+    }
+    for (const model of GEMINI_MODEL_PRIORITY) {
+      const option = document.createElement("option");
+      option.value = `gemini:${model}`;
+      option.textContent = `Gemini · ${model}`;
+      document.getElementById("aiTestModel").appendChild(option);
+    }
     const RATE_LIMITED_UNTIL = {};
 
     function buildRecipePrompt(elem1, elem2) {
