@@ -151,16 +151,12 @@
       </div>
     </div>
 
-    <!-- Sağ: Cihaz Modu, Ses, Bulut Eşitleme ve Ayarlar -->
+    <!-- Sağ: Cihaz Modu ve Ses -->
     <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-      <button onclick="openSettingsModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition" title="Ayarlar">
-        <span>⚙️</span>
-      </button>
       <button id="deviceModeBtn" onclick="toggleDeviceMode()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Bilgisayar / Telefon Görünümü Değiştir">
         <span id="deviceModeIcon">💻</span>
         <span id="deviceModeLabel" class="hidden sm:inline">PC</span>
       </button>
-
       <button id="soundToggleBtn" onclick="toggleSound()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition" title="Ses Efektlerini Aç/Kapat">
         <span id="soundIcon">🔊</span>
       </button>
@@ -441,7 +437,7 @@
 
   <script>
     /* =========================================================================
-       1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE
+       1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE (TÜM TARİFLER GERİ YÜKLENDİ)
        ========================================================================= */
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
     const DEFAULT_GEMINI_KEY = "__GEMINI_API_KEY__";
@@ -752,6 +748,7 @@
     let activityLogRefreshTimer = null;
     const ACTIVITY_LOG_PASSWORD = "Marul";
     const ACTIVITY_LOG_LIMIT = 50;
+    const LOCAL_ACTIVITY_KEY = "alchemy_local_activity";
 
     function getFirebaseBaseUrl() { return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, ""); }
     function getGeminiApiKey() { return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim(); }
@@ -827,13 +824,23 @@
     }
 
     async function logSharedActivity(description, details = "") {
+      const entry = {
+        actor: `${getActivityBrowserName()} · Ziyaretçi ${getActivityVisitorId()}`,
+        description: String(description).slice(0, 180),
+        timestamp: Date.now()
+      };
+      if (details) entry.details = String(details).slice(0, 12000);
+
+      // 1. Yerel Hafıza (Garantili Kayıt)
       try {
-        const entry = {
-          actor: `${getActivityBrowserName()} · Ziyaretçi ${getActivityVisitorId()}`,
-          description: String(description).slice(0, 180),
-          timestamp: Date.now()
-        };
-        if (details) entry.details = String(details).slice(0, 12000);
+        let localLogs = JSON.parse(localStorage.getItem(LOCAL_ACTIVITY_KEY) || "[]");
+        localLogs.unshift(entry);
+        if (localLogs.length > ACTIVITY_LOG_LIMIT) localLogs = localLogs.slice(0, ACTIVITY_LOG_LIMIT);
+        localStorage.setItem(LOCAL_ACTIVITY_KEY, JSON.stringify(localLogs));
+      } catch (e) {}
+
+      // 2. Firebase Bulut Kayıt
+      try {
         const response = await fetch(`${getFirebaseBaseUrl()}/activity.json`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -843,7 +850,7 @@
       } catch (error) {
         const status = document.getElementById("activityLogStatus");
         if (status && !document.getElementById("activityLogContentView").classList.contains("hidden")) {
-          status.textContent = "İşlem kaydedilemedi. Firebase okuma/yazma kurallarını kontrol edin.";
+          status.textContent = "Bulut bağlantısı yok, yerel kayıtlar gösteriliyor.";
         }
       }
     }
@@ -851,54 +858,76 @@
     async function loadSharedActivity() {
       const status = document.getElementById("activityLogStatus");
       const list = document.getElementById("activityLogList");
+      let allEntries = [];
+
+      // 1. Yerel Kayıtları Al
+      try {
+        const localLogs = JSON.parse(localStorage.getItem(LOCAL_ACTIVITY_KEY) || "[]");
+        allEntries.push(...localLogs);
+      } catch(e) {}
+
+      // 2. Firebase Kayıtlarını Al
       try {
         const url = `${getFirebaseBaseUrl()}/activity.json?orderBy=%22$key%22&limitToLast=${ACTIVITY_LOG_LIMIT}`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Activity read failed");
-        const data = await response.json();
-        const entries = Object.values(data || {}).filter(entry => entry && typeof entry === "object").sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
-
-        list.replaceChildren();
-        if (entries.length === 0) {
-          status.textContent = "Henüz ortak bir işlem kaydı yok.";
-          return;
+        if (response.ok) {
+          const data = await response.json();
+          const fbEntries = Object.values(data || {}).filter(entry => entry && typeof entry === "object");
+          allEntries.push(...fbEntries);
         }
-
-        status.textContent = `Son ${entries.length} işlem`;
-        entries.forEach(entry => {
-          const row = document.createElement("li");
-          row.className = "py-3";
-          const actor = document.createElement("p");
-          actor.className = "text-[11px] font-semibold text-cyan-300";
-          actor.textContent = entry.actor || "Anonim ziyaretçi";
-          const description = document.createElement("p");
-          description.className = "mt-0.5 break-words text-sm text-slate-200 font-bold";
-          description.textContent = entry.description || "İşlem";
-          const time = document.createElement("time");
-          time.className = "mt-1 block text-[10px] text-slate-500";
-          const timestamp = Number(entry.timestamp);
-          time.dateTime = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : "";
-          time.textContent = Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString("tr-TR") : "Tarih bilinmiyor";
-          row.append(actor, description, time);
-          
-          if (entry.details) {
-            const details = document.createElement("details");
-            details.className = "mt-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2";
-            const summary = document.createElement("summary");
-            summary.className = "cursor-pointer text-xs font-semibold text-cyan-300 outline-none";
-            summary.textContent = "İstek / Yanıt Detaylarını Gör";
-            const content = document.createElement("pre");
-            content.className = "mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-[10px] leading-relaxed text-slate-300 font-mono-code";
-            content.textContent = entry.details;
-            details.append(summary, content);
-            row.appendChild(details);
-          }
-          list.appendChild(row);
-        });
       } catch (error) {
-        list.replaceChildren();
-        status.textContent = "Ortak geçmiş yüklenemedi. Firebase okuma iznini ve bağlantıyı kontrol edin.";
+        // Sadece yerel veriler kalır
       }
+
+      // 3. Birleştir, Tekrarları Kaldır ve Sırala
+      const uniqueEntries = [];
+      const seen = new Set();
+      allEntries.forEach(entry => {
+        const hash = `${entry.timestamp}-${entry.description}`;
+        if (!seen.has(hash)) {
+          seen.add(hash);
+          uniqueEntries.push(entry);
+        }
+      });
+      uniqueEntries.sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
+
+      list.replaceChildren();
+      if (uniqueEntries.length === 0) {
+        status.textContent = "Henüz bir işlem kaydı yok.";
+        return;
+      }
+
+      status.textContent = `Son ${uniqueEntries.length} işlem (Yerel + Bulut)`;
+      uniqueEntries.forEach(entry => {
+        const row = document.createElement("li");
+        row.className = "py-3";
+        const actor = document.createElement("p");
+        actor.className = "text-[11px] font-semibold text-cyan-300";
+        actor.textContent = entry.actor || "Anonim ziyaretçi";
+        const description = document.createElement("p");
+        description.className = "mt-0.5 break-words text-sm text-slate-200 font-bold";
+        description.textContent = entry.description || "İşlem";
+        const time = document.createElement("time");
+        time.className = "mt-1 block text-[10px] text-slate-500";
+        const timestamp = Number(entry.timestamp);
+        time.dateTime = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : "";
+        time.textContent = Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString("tr-TR") : "Tarih bilinmiyor";
+        row.append(actor, description, time);
+        
+        if (entry.details) {
+          const details = document.createElement("details");
+          details.className = "mt-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2";
+          const summary = document.createElement("summary");
+          summary.className = "cursor-pointer text-xs font-semibold text-cyan-300 outline-none";
+          summary.textContent = "İstek / Yanıt Detaylarını Gör";
+          const content = document.createElement("pre");
+          content.className = "mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-[10px] leading-relaxed text-slate-300 font-mono-code";
+          content.textContent = entry.details;
+          details.append(summary, content);
+          row.appendChild(details);
+        }
+        list.appendChild(row);
+      });
     }
 
     function saveProgressToLocal() {
@@ -1711,6 +1740,7 @@ Kurallar:
       localStorage.removeItem("alchemy_inventory_v3");
       localStorage.removeItem("alchemy_canvas_v3");
       localStorage.removeItem("alchemy_missions_v1");
+      localStorage.removeItem(LOCAL_ACTIVITY_KEY);
       logSharedActivity("Oyuncu ilerlemesini sıfırladı.");
       clearCanvas(); inventory = [...STARTER_ELEMENTS];
       missionProgress = { bio: 0, industry: 0, tech: 0 };
