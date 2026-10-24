@@ -153,6 +153,9 @@
 
     <!-- Sağ: Cihaz Modu, Ses, Bulut Eşitleme ve Ayarlar -->
     <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+      <button onclick="openSettingsModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition" title="Ayarlar">
+        <span>⚙️</span>
+      </button>
       <button id="deviceModeBtn" onclick="toggleDeviceMode()" class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition" title="Bilgisayar / Telefon Görünümü Değiştir">
         <span id="deviceModeIcon">💻</span>
         <span id="deviceModeLabel" class="hidden sm:inline">PC</span>
@@ -366,40 +369,42 @@
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2">
-          <span class="text-xl">☁️</span>
-          <h3 class="text-base font-extrabold text-white">Bulut Katalog & Sistem Ayarları</h3>
+          <span class="text-xl">⚙️</span>
+          <h3 class="text-base font-extrabold text-white">Sistem Ayarları & API Yönetimi</h3>
         </div>
         <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold">✕</button>
       </div>
 
       <div class="space-y-3 text-xs">
-        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-200 space-y-2">
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Groq API Anahtarı (Öncelikli - 1000 İstek/Gün)</label>
+          <input id="cfgGroqKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Google Gemini API Anahtarı (Yedek - 500+ İstek/Gün)</label>
+          <input id="cfgGeminiKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Firebase Realtime DB URL (Bulut Kayıt)</label>
+          <input id="cfgFirebaseUrl" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+        </div>
+
+        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-200 space-y-2 mt-2">
           <div class="font-bold text-sm flex items-center gap-1.5">
             <span>🚀</span>
-            <span>235+ Hazır Formülü Firebase'e Yükle</span>
+            <span>235+ Hazır Formülü Buluta Yükle</span>
           </div>
-          <p class="text-indigo-200/80 leading-relaxed">
-            Yerleşik tüm bilimsel ve teknolojik tarifleri (formülleriyle birlikte) tek tıkla kendi Firebase Realtime Database adresine aktarabilirsin.
-          </p>
           <button id="syncFirebaseBtn" onclick="syncAllLocalRecipesToFirebase()" class="w-full py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-extrabold transition shadow">
-            ☁️ Tüm Kataloğu Şimdi Firebase'e Aktar
+            ☁️ Kataloğu Firebase'e Aktar
           </button>
           <div id="syncStatusText" class="text-[11px] font-mono-code text-cyan-300"></div>
         </div>
 
-        <div>
-          <label class="block text-slate-400 font-semibold mb-1">Firebase Realtime DB URL</label>
-          <input id="cfgFirebaseUrl" type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
-        </div>
-
-        <div>
-          <label class="block text-slate-400 font-semibold mb-1">Google Gemini API Anahtarı (Yeni Keşifler İçin)</label>
-          <input id="cfgGeminiKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
-        </div>
-
-        <div class="flex items-center justify-between pt-2 border-t border-slate-800 gap-2">
+        <div class="flex items-center justify-between pt-3 border-t border-slate-800 gap-2">
           <button onclick="resetAllProgress()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold">
-            🗑️ İlerlemeyi Sıfırla
+            🗑️ Sıfırla
           </button>
           <button onclick="saveSettingsFromModal()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold">
             Kaydet ve Kapat
@@ -409,19 +414,19 @@
     </div>
   </div>
 
-  <!-- 7. MODAL: PAROLA KORUMALI ORTAK İŞLEM GEÇMİŞİ -->
+  <!-- 7. MODAL: PAROLA KORUMALI ORTAK İŞLEM GEÇMİŞİ (GİZLİ EKRAN) -->
   <div id="activityLogModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-extrabold text-white">Son İşlemler</h2>
-          <p class="text-[11px] text-slate-400">Ortak oyun etkinlikleri</p>
+          <h2 class="text-sm font-extrabold text-white">Son İşlemler & Yapay Zekâ Günlüğü</h2>
+          <p class="text-[11px] text-slate-400">Hangi sağlayıcı kullanıldı, istek ve yanıt neydi?</p>
         </div>
         <button type="button" onclick="closeActivityLogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" aria-label="Kapat">✕</button>
       </div>
 
       <form id="activityPasswordView" onsubmit="unlockActivityLog(event)" class="p-4 space-y-3">
-        <label for="activityLogPassword" class="block text-xs font-semibold text-slate-300">Geçmişi görüntülemek için parola</label>
+        <label for="activityLogPassword" class="block text-xs font-semibold text-slate-300">Geçmişi görüntülemek için yönetici parolası</label>
         <input id="activityLogPassword" type="password" autocomplete="current-password" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-sm text-white outline-none" />
         <p id="activityPasswordError" class="hidden text-xs text-rose-300">Parola yanlış.</p>
         <button type="submit" class="w-full rounded-lg bg-cyan-500 hover:bg-cyan-400 px-3 py-2 text-sm font-bold text-slate-950">Görüntüle</button>
@@ -436,13 +441,12 @@
 
   <script>
     /* =========================================================================
-       1. BAŞLANGIÇ ELEMENTLERİ VE 235+ FORMÜL KÜTÜPHANESİ
+       1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE
        ========================================================================= */
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
     const DEFAULT_GEMINI_KEY = "__GEMINI_API_KEY__";
     const DEFAULT_GROQ_KEY = "__GROQ_API_KEY__";
 
-    // Temel Başlangıç Elementleri
     const STARTER_ELEMENTS = [
       { name: "Hidrojen", emoji: "💧", cat: "element", formula: "H • Atom No: 1", desc: "Evrenin en hafif ve en bol elementi" },
       { name: "Oksijen", emoji: "💨", cat: "element", formula: "O₂ • Atom No: 8", desc: "Yaşam ve yanma için temel gaz" },
@@ -460,7 +464,6 @@
       { name: "Işık", emoji: "💡", cat: "enerji", formula: "hν • Foton Dalgası", desc: "Elektromanyetik ışıma ve fotonlar" }
     ];
 
-    // Zenginleştirilmiş Yerleşik Formül Havuzu
     const MASTER_RECIPES = {
       "hidrojen_hidrojen": { name: "Helyum (He)", emoji: "🎈", cat: "element", formula: "Hidrojen + Hidrojen (Füzyon)" },
       "helyum (he)_helyum (he)": { name: "Yıldız Çekirdeği", emoji: "🌟", cat: "enerji", formula: "Helyum + Helyum" },
@@ -472,7 +475,6 @@
       "ateş_ateş": { name: "Plazma", emoji: "☄️", cat: "enerji", formula: "Ateş + Ateş" },
       "elektrik_elektrik": { name: "Yıldırım", emoji: "🌩️", cat: "enerji", formula: "Elektrik + Elektrik" },
       "ışık_ışık": { name: "Lazer", emoji: "🔦", cat: "enerji", formula: "Işık + Işık" },
-
       "hidrojen_oksijen": { name: "Su (H₂O)", emoji: "🌊", cat: "madde", formula: "Hidrojen + Oksijen" },
       "su (h₂o)_su (h₂o)": { name: "Okyanus", emoji: "🌏", cat: "madde", formula: "Su + Su" },
       "su (h₂o)_ateş": { name: "Buhar", emoji: "♨️", cat: "madde", formula: "Su + Ateş" },
@@ -486,7 +488,6 @@
       "metan gazı (ch₄)_oksijen": { name: "Alev Patlaması", emoji: "💥", cat: "enerji", formula: "Metan Gazı + Oksijen" },
       "azot_hidrojen": { name: "Amonyak (NH₃)", emoji: "🧪", cat: "madde", formula: "Azot + Hidrojen" },
       "amonyak (nh₃)_oksijen": { name: "Nitrik Asit", emoji: "⚗️", cat: "madde", formula: "Amonyak + Oksijen" },
-
       "demir_karbon": { name: "Çelik", emoji: "⚔️", cat: "madde", formula: "Demir + Karbon" },
       "demir_oksijen": { name: "Pas (Demir Oksit)", emoji: "🧱", cat: "madde", formula: "Demir + Oksijen" },
       "demir_ateş": { name: "Erimiş Metal", emoji: "🌋", cat: "madde", formula: "Demir + Ateş" },
@@ -498,7 +499,6 @@
       "cam_elektrik": { name: "Ampul", emoji: "💡", cat: "elektronik", formula: "Cam + Elektrik" },
       "kum (silika)_su (h₂o)": { name: "Kil", emoji: "🏺", cat: "madde", formula: "Kum + Su" },
       "kil_ateş": { name: "Seramik", emoji: "🧱", cat: "madde", formula: "Kil + Ateş" },
-
       "bakır_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır + Elektrik" },
       "bakır_ateş": { name: "Bakır Tel", emoji: "➰", cat: "madde", formula: "Bakır + Ateş" },
       "bakır tel_elektrik": { name: "Kablo", emoji: "🔌", cat: "elektronik", formula: "Bakır Tel + Elektrik" },
@@ -507,7 +507,6 @@
       "lityum_elektrik": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Elektrik" },
       "lityum_karbon": { name: "Batarya", emoji: "🔋", cat: "elektronik", formula: "Lityum + Karbon" },
       "batarya_batarya": { name: "Güç İstasyonu", emoji: "⚡", cat: "enerji", formula: "Batarya + Batarya" },
-
       "silisyum_elektrik": { name: "Transistör", emoji: "🎛️", cat: "elektronik", formula: "Silisyum + Elektrik" },
       "silisyum_ateş": { name: "Silikon Plaka", emoji: "💿", cat: "elektronik", formula: "Silisyum + Ateş" },
       "transistör_transistör": { name: "Mikroçip", emoji: "🔲", cat: "elektronik", formula: "Transistör + Transistör" },
@@ -518,7 +517,6 @@
       "mikroçip_kablo": { name: "Anakart", emoji: "🟩", cat: "elektronik", formula: "Mikroçip + Kablo" },
       "işlemci (cpu)_anakart": { name: "Bilgisayar", emoji: "💻", cat: "elektronik", formula: "İşlemci (CPU) + Anakart" },
       "işlemci (cpu)_ışık": { name: "Ekran Kartı (GPU)", emoji: "🎮", cat: "elektronik", formula: "İşlemci (CPU) + Işık" },
-
       "cam_ışık": { name: "Ekran Paneli", emoji: "🖥️", cat: "elektronik", formula: "Cam + Işık" },
       "cam_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Cam + Mikroçip" },
       "ekran paneli_mikroçip": { name: "Dokunmatik Ekran", emoji: "📱", cat: "elektronik", formula: "Ekran Paneli + Mikroçip" },
@@ -528,7 +526,6 @@
       "akıllı telefon_dokunmatik ekran": { name: "Tablet", emoji: "📟", cat: "elektronik", formula: "Akıllı Telefon + Dokunmatik Ekran" },
       "tablet_işlemci (cpu)": { name: "Dizüstü Bilgisayar", emoji: "💻", cat: "elektronik", formula: "Tablet + İşlemci (CPU)" },
       "akıllı telefon_zaman": { name: "Akıllı Saat", emoji: "⌚", cat: "elektronik", formula: "Akıllı Telefon + Zaman" },
-
       "işlemci (cpu)_elektrik": { name: "Yazılım Kodu", emoji: "👨‍💻", cat: "elektronik", formula: "İşlemci (CPU) + Elektrik" },
       "bilgisayar_bilgisayar": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Bilgisayar" },
       "bilgisayar_fiber optik": { name: "İnternet", emoji: "🌐", cat: "elektronik", formula: "Bilgisayar + Fiber Optik" },
@@ -539,7 +536,6 @@
       "yapay zekâ (ai)_elektrik motoru": { name: "Robot", emoji: "🦾", cat: "elektronik", formula: "Yapay Zekâ (AI) + Elektrik Motoru" },
       "robot_yapay zekâ (ai)": { name: "İnsansı Robot (Android)", emoji: "🦿", cat: "elektronik", formula: "Robot + Yapay Zekâ (AI)" },
       "bilgisayar_lazer": { name: "Kuantum Bilgisayar", emoji: "⚛️", cat: "elektronik", formula: "Bilgisayar + Lazer" },
-
       "uranyum_uranyum": { name: "Kritik Kütle", emoji: "☢️", cat: "enerji", formula: "Uranyum + Uranyum" },
       "kritik kütle_kritik kütle": { name: "Nükleer Patlama", emoji: "🍄", cat: "enerji", formula: "Kritik Kütle + Kritik Kütle" },
       "uranyum_su (h₂o)": { name: "Nükleer Reaktör", emoji: "🏭", cat: "enerji", formula: "Uranyum + Su" },
@@ -548,7 +544,6 @@
       "roket motoru_bilgisayar": { name: "Uzay Gemisi", emoji: "🛸", cat: "elektronik", formula: "Roket Motoru + Bilgisayar" },
       "uzay gemisi_güneş": { name: "Uzay İstasyonu", emoji: "🛰️", cat: "elektronik", formula: "Uzay Gemisi + Güneş" },
       "ışık_silisyum": { name: "Güneş Paneli", emoji: "☀️", cat: "enerji", formula: "Işık + Silisyum" },
-
       "su (h₂o)_karbon": { name: "Organik Molekül", emoji: "🧬", cat: "madde", formula: "Su + Karbon" },
       "organik molekül_elektrik": { name: "Hücre", emoji: "🦠", cat: "madde", formula: "Organik Molekül + Elektrik" },
       "organik molekül_zaman": { name: "Yaşam", emoji: "🌱", cat: "madde", formula: "Organik Molekül + Zaman" },
@@ -560,93 +555,57 @@
       "insan_bilgisayar": { name: "Siborg (Cyborg)", emoji: "🦾", cat: "elektronik", formula: "İnsan + Bilgisayar" }
     };
 
-    /* =========================================================================
-       GÖREV / HEDEF SİSTEMİ VERİSİ
-       ========================================================================= */
     const MISSIONS = [
-      {
-        id: "bio",
-        name: "Biyolojik Yaşam",
-        emoji: "🌱",
-        steps: [
-          { name: "Su (H₂O)", label: "Su Oluştur" },
-          { name: "Yaşam", label: "Yaşamı Başlat" },
-          { name: "Hücre", label: "Hücre Oluştur" },
-          { name: "İnsan", label: "İnsan Oluştur" }
-        ]
-      },
-      {
-        id: "industry",
-        name: "Sanayi Devrimi",
-        emoji: "🏭",
-        steps: [
-          { name: "Çelik", label: "Çelik Üret" },
-          { name: "Kum (Silika)", label: "Kum Üret" },
-          { name: "Cam", label: "Cam Üret" },
-          { name: "Nükleer Enerji", label: "Nükleer Enerji Üret" }
-        ]
-      },
-      {
-        id: "tech",
-        name: "Elektronik ve Bilişim",
-        emoji: "💻",
-        steps: [
-          { name: "Transistör", label: "Transistör Üret" },
-          { name: "İşlemci (CPU)", label: "İşlemci Üret" },
-          { name: "Bilgisayar", label: "Bilgisayar Üret" },
-          { name: "Yapay Zekâ (AI)", label: "Yapay Zekâ Oluştur" }
-        ]
-      }
+      { id: "bio", name: "Biyolojik Yaşam", emoji: "🌱", steps: [
+        { name: "Su (H₂O)", label: "Su Oluştur" },
+        { name: "Yaşam", label: "Yaşamı Başlat" },
+        { name: "Hücre", label: "Hücre Oluştur" },
+        { name: "İnsan", label: "İnsan Oluştur" }
+      ]},
+      { id: "industry", name: "Sanayi Devrimi", emoji: "🏭", steps: [
+        { name: "Çelik", label: "Çelik Üret" },
+        { name: "Kum (Silika)", label: "Kum Üret" },
+        { name: "Cam", label: "Cam Üret" },
+        { name: "Nükleer Enerji", label: "Nükleer Enerji Üret" }
+      ]},
+      { id: "tech", name: "Elektronik ve Bilişim", emoji: "💻", steps: [
+        { name: "Transistör", label: "Transistör Üret" },
+        { name: "İşlemci (CPU)", label: "İşlemci Üret" },
+        { name: "Bilgisayar", label: "Bilgisayar Üret" },
+        { name: "Yapay Zekâ (AI)", label: "Yapay Zekâ Oluştur" }
+      ]}
     ];
 
     const NORMALIZED_RECIPES = {};
     const REACTION_CACHE = {};
     const ELEMENT_FORMULA_MAP = {};
 
-    // Metin baş harflerini Türkçe uyumlu büyüt
     function formatTitleCase(str) {
-      return (str || "")
-        .split(" ")
-        .map(w => w ? w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1) : "")
-        .join(" ");
+      return (str || "").split(" ").map(w => w ? w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1) : "").join(" ");
     }
 
-    // Anahtar normalizasyonu (Sıradan ve parantezlerden bağımsız)
     function normalizeKey(a, b) {
-      const clean = (s) => (s || "")
-        .toLocaleLowerCase("tr-TR")
-        .replace(/\([^)]*\)/g, "")
-        .replace(/[.#$\[\]\/()]/g, "")
-        .trim()
-        .replace(/\s+/g, " ");
+      const clean = (s) => (s || "").toLocaleLowerCase("tr-TR").replace(/\([^)]*\)/g, "").replace(/[.#$\[\]\/()]/g, "").trim().replace(/\s+/g, " ");
       return [clean(a), clean(b)].sort().join("_");
     }
 
     function prepareMasterRecipes() {
-      STARTER_ELEMENTS.forEach(s => {
-        ELEMENT_FORMULA_MAP[s.name.toLocaleLowerCase("tr-TR")] = s.formula;
-      });
-
+      STARTER_ELEMENTS.forEach(s => { ELEMENT_FORMULA_MAP[s.name.toLocaleLowerCase("tr-TR")] = s.formula; });
       for (const [rawKey, val] of Object.entries(MASTER_RECIPES)) {
         const parts = rawKey.split("_");
         if (parts.length === 2) {
           const p1 = formatTitleCase(parts[0]);
           const p2 = formatTitleCase(parts[1]);
-          if (!val.formula) {
-            val.formula = `${p1} + ${p2}`;
-          }
+          if (!val.formula) val.formula = `${p1} + ${p2}`;
           const normKey = normalizeKey(parts[0], parts[1]);
           NORMALIZED_RECIPES[normKey] = val;
           const exactKey = [parts[0].trim().toLocaleLowerCase("tr-TR"), parts[1].trim().toLocaleLowerCase("tr-TR")].sort().join("_");
           NORMALIZED_RECIPES[exactKey] = val;
         }
-        if (val.name && val.formula) {
-          ELEMENT_FORMULA_MAP[val.name.toLocaleLowerCase("tr-TR")] = val.formula;
-        }
+        if (val.name && val.formula) ELEMENT_FORMULA_MAP[val.name.toLocaleLowerCase("tr-TR")] = val.formula;
       }
     }
 
-    // Herhangi bir elementin altındaki formül bilgisini döndürür
     function getElementFormulaText(item) {
       if (!item) return "Temel Madde";
       if (item.formula && item.formula.trim() !== "") return item.formula;
@@ -657,7 +616,7 @@
     }
 
     /* =========================================================================
-       2. SES EFEKTLERİ (SAF WEB AUDIO SYNTHESIZER)
+       2. SES EFEKTLERİ
        ========================================================================= */
     let soundEnabled = true;
     let audioCtx = null;
@@ -667,9 +626,7 @@
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (AudioContextClass) audioCtx = new AudioContextClass();
       }
-      if (audioCtx && audioCtx.state === "suspended") {
-        audioCtx.resume();
-      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
       return audioCtx;
     }
 
@@ -681,42 +638,32 @@
         const now = ctx.currentTime;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
+        osc.connect(gain); gain.connect(ctx.destination);
         if (type === "spawn") {
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(320, now);
+          osc.type = "sine"; osc.frequency.setValueAtTime(320, now);
           osc.frequency.exponentialRampToValueAtTime(580, now + 0.09);
           gain.gain.setValueAtTime(0.08, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-          osc.start(now);
-          osc.stop(now + 0.1);
+          osc.start(now); osc.stop(now + 0.1);
         } else if (type === "success") {
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(440, now);
+          osc.type = "triangle"; osc.frequency.setValueAtTime(440, now);
           osc.frequency.setValueAtTime(554.37, now + 0.07);
           osc.frequency.setValueAtTime(659.25, now + 0.14);
           gain.gain.setValueAtTime(0.12, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-          osc.start(now);
-          osc.stop(now + 0.32);
+          osc.start(now); osc.stop(now + 0.32);
         } else if (type === "explosion") {
-          osc.type = "sawtooth";
-          osc.frequency.setValueAtTime(140, now);
+          osc.type = "sawtooth"; osc.frequency.setValueAtTime(140, now);
           osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
           gain.gain.setValueAtTime(0.18, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
-          osc.start(now);
-          osc.stop(now + 0.36);
+          osc.start(now); osc.stop(now + 0.36);
         } else if (type === "fail" || type === "trash") {
-          osc.type = "sawtooth";
-          osc.frequency.setValueAtTime(220, now);
+          osc.type = "sawtooth"; osc.frequency.setValueAtTime(220, now);
           osc.frequency.exponentialRampToValueAtTime(110, now + 0.15);
           gain.gain.setValueAtTime(0.07, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-          osc.start(now);
-          osc.stop(now + 0.16);
+          osc.start(now); osc.stop(now + 0.16);
         }
       } catch (e) {}
     }
@@ -727,121 +674,62 @@
     }
 
     /* =========================================================================
-       3. GÖRSEL TEMA VE PARÇACIK EFEKT (VFX) MOTORU
+       3. GÖRSEL TEMA VE VFX
        ========================================================================= */
     function getElementVisualProfile(item) {
       const name = (item.name || "").toLocaleLowerCase("tr-TR");
       const cat = item.cat || "madde";
-
       if (name.includes("patlama") || name.includes("ateş") || name.includes("alev") || name.includes("plazma") || name.includes("erimiş") || name.includes("roket")) {
-        return {
-          theme: "fire",
-          cardBorder: "border-orange-500/80",
-          cardBg: "bg-gradient-to-br from-orange-950/90 to-slate-900/95",
-          formulaColor: "text-orange-300",
-          colors: ["#f97316", "#ef4444", "#facc15"]
-        };
+        return { theme: "fire", cardBorder: "border-orange-500/80", cardBg: "bg-gradient-to-br from-orange-950/90 to-slate-900/95", formulaColor: "text-orange-300", colors: ["#f97316", "#ef4444", "#facc15"] };
       }
       if (name.includes("su") || name.includes("okyanus") || name.includes("hidrojen") || name.includes("buhar") || name.includes("bulut")) {
-        return {
-          theme: "water",
-          cardBorder: "border-sky-400/80",
-          cardBg: "bg-gradient-to-br from-sky-950/90 to-slate-900/95",
-          formulaColor: "text-sky-300",
-          colors: ["#38bdf8", "#0284c7", "#bae6fd"]
-        };
+        return { theme: "water", cardBorder: "border-sky-400/80", cardBg: "bg-gradient-to-br from-sky-950/90 to-slate-900/95", formulaColor: "text-sky-300", colors: ["#38bdf8", "#0284c7", "#bae6fd"] };
       }
       if (name.includes("uranyum") || name.includes("nükleer") || name.includes("kritik") || name.includes("asit")) {
-        return {
-          theme: "radioactive",
-          cardBorder: "border-lime-400/80",
-          cardBg: "bg-gradient-to-br from-lime-950/90 to-slate-900/95",
-          formulaColor: "text-lime-300",
-          colors: ["#a3e635", "#22c55e", "#bef264"]
-        };
+        return { theme: "radioactive", cardBorder: "border-lime-400/80", cardBg: "bg-gradient-to-br from-lime-950/90 to-slate-900/95", formulaColor: "text-lime-300", colors: ["#a3e635", "#22c55e", "#bef264"] };
       }
       if (cat === "elektronik" || name.includes("elektrik") || name.includes("çip") || name.includes("telefon") || name.includes("bilgisayar") || name.includes("yapay zekâ")) {
-        return {
-          theme: "electric",
-          cardBorder: "border-cyan-400/80",
-          cardBg: "bg-gradient-to-br from-cyan-950/90 to-slate-900/95",
-          formulaColor: "text-cyan-300",
-          colors: ["#22d3ee", "#3b82f6", "#fde047"]
-        };
+        return { theme: "electric", cardBorder: "border-cyan-400/80", cardBg: "bg-gradient-to-br from-cyan-950/90 to-slate-900/95", formulaColor: "text-cyan-300", colors: ["#22d3ee", "#3b82f6", "#fde047"] };
       }
       if (name.includes("yaşam") || name.includes("bitki") || name.includes("ağaç") || name.includes("hücre") || name.includes("organik")) {
-        return {
-          theme: "nature",
-          cardBorder: "border-emerald-400/80",
-          cardBg: "bg-gradient-to-br from-emerald-950/90 to-slate-900/95",
-          formulaColor: "text-emerald-300",
-          colors: ["#34d399", "#10b981", "#a7f3d0"]
-        };
+        return { theme: "nature", cardBorder: "border-emerald-400/80", cardBg: "bg-gradient-to-br from-emerald-950/90 to-slate-900/95", formulaColor: "text-emerald-300", colors: ["#34d399", "#10b981", "#a7f3d0"] };
       }
-      return {
-        theme: "matter",
-        cardBorder: "border-slate-600/90",
-        cardBg: "bg-slate-800/95",
-        formulaColor: "text-cyan-300/90",
-        colors: ["#38bdf8", "#a855f7", "#f8fafc"]
-      };
+      return { theme: "matter", cardBorder: "border-slate-600/90", cardBg: "bg-slate-800/95", formulaColor: "text-cyan-300/90", colors: ["#38bdf8", "#a855f7", "#f8fafc"] };
     }
 
     function triggerVfxBurst(x, y, profile) {
       const fxLayer = document.getElementById("canvasFxLayer");
       if (!fxLayer) return;
-
       const ring = document.createElement("div");
-      ring.style.position = "absolute";
-      ring.style.left = `${x}px`;
-      ring.style.top = `${y}px`;
-      ring.style.width = "16px";
-      ring.style.height = "16px";
-      ring.style.borderRadius = "9999px";
+      ring.style.position = "absolute"; ring.style.left = `${x}px`; ring.style.top = `${y}px`;
+      ring.style.width = "16px"; ring.style.height = "16px"; ring.style.borderRadius = "9999px";
       ring.style.border = `3px solid ${profile.colors[0]}`;
       ring.style.transform = "translate(-50%, -50%) scale(1)";
       ring.style.opacity = "0.95";
       ring.style.transition = "transform 0.45s ease-out, opacity 0.45s ease-out";
       fxLayer.appendChild(ring);
-
-      requestAnimationFrame(() => {
-        ring.style.transform = "translate(-50%, -50%) scale(7.5)";
-        ring.style.opacity = "0";
-      });
+      requestAnimationFrame(() => { ring.style.transform = "translate(-50%, -50%) scale(7.5)"; ring.style.opacity = "0"; });
       setTimeout(() => ring.remove(), 480);
-
       if (profile.theme === "fire" || profile.theme === "radioactive") {
         const canvas = document.getElementById("alchemyCanvas");
-        canvas.classList.remove("shake-screen");
-        void canvas.offsetWidth;
+        canvas.classList.remove("shake-screen"); void canvas.offsetWidth;
         canvas.classList.add("shake-screen");
         playSound("explosion");
-      } else {
-        playSound("success");
-      }
-
+      } else playSound("success");
       const count = 16;
       for (let i = 0; i < count; i++) {
         const p = document.createElement("div");
         const size = 5 + Math.random() * 6;
         const color = profile.colors[i % profile.colors.length];
-        p.style.position = "absolute";
-        p.style.left = `${x}px`;
-        p.style.top = `${y}px`;
-        p.style.width = `${size}px`;
-        p.style.height = `${size}px`;
-        p.style.borderRadius = "9999px";
-        p.style.backgroundColor = color;
-        p.style.boxShadow = `0 0 8px ${color}`;
+        p.style.position = "absolute"; p.style.left = `${x}px`; p.style.top = `${y}px`;
+        p.style.width = `${size}px`; p.style.height = `${size}px`; p.style.borderRadius = "9999px";
+        p.style.backgroundColor = color; p.style.boxShadow = `0 0 8px ${color}`;
         p.style.transform = "translate(-50%, -50%)";
         p.style.transition = "transform 0.52s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.52s ease-out";
         fxLayer.appendChild(p);
-
         const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
         const dist = 38 + Math.random() * 55;
-        const dx = Math.cos(angle) * dist;
-        const dy = Math.sin(angle) * dist;
-
+        const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
         requestAnimationFrame(() => {
           p.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2)`;
           p.style.opacity = "0";
@@ -851,7 +739,7 @@
     }
 
     /* =========================================================================
-       4. UYGULAMA DURUMU (STATE) VE YEREL HAFIZA (LOCAL STORAGE)
+       4. STATE & STORAGE
        ========================================================================= */
     let inventory = [];
     let canvasItems = [];
@@ -865,17 +753,9 @@
     const ACTIVITY_LOG_PASSWORD = "Marul";
     const ACTIVITY_LOG_LIMIT = 50;
 
-    function getFirebaseBaseUrl() {
-      return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, "");
-    }
-
-    function getGeminiApiKey() {
-      return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim();
-    }
-
-    function getGroqApiKey() {
-      return (localStorage.getItem("alchemy_groq_key") || DEFAULT_GROQ_KEY || "").trim();
-    }
+    function getFirebaseBaseUrl() { return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, ""); }
+    function getGeminiApiKey() { return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim(); }
+    function getGroqApiKey() { return (localStorage.getItem("alchemy_groq_key") || DEFAULT_GROQ_KEY || "").trim(); }
 
     function startActivityLogHold(event) {
       if (event.button !== undefined && event.button !== 0) return;
@@ -887,10 +767,7 @@
     }
 
     function cancelActivityLogHold() {
-      if (activityLogHoldTimer) {
-        clearTimeout(activityLogHoldTimer);
-        activityLogHoldTimer = null;
-      }
+      if (activityLogHoldTimer) { clearTimeout(activityLogHoldTimer); activityLogHoldTimer = null; }
     }
 
     function openActivityLogModal() {
@@ -899,19 +776,14 @@
       document.getElementById("activityLogContentView").classList.add("hidden");
       document.getElementById("activityPasswordError").classList.add("hidden");
       document.getElementById("activityLogPassword").value = "";
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
+      modal.classList.remove("hidden"); modal.classList.add("flex");
       document.getElementById("activityLogPassword").focus();
     }
 
     function closeActivityLogModal() {
-      if (activityLogRefreshTimer) {
-        clearInterval(activityLogRefreshTimer);
-        activityLogRefreshTimer = null;
-      }
+      if (activityLogRefreshTimer) { clearInterval(activityLogRefreshTimer); activityLogRefreshTimer = null; }
       const modal = document.getElementById("activityLogModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
+      modal.classList.add("hidden"); modal.classList.remove("flex");
     }
 
     async function unlockActivityLog(event) {
@@ -919,10 +791,8 @@
       const passwordInput = document.getElementById("activityLogPassword");
       if (passwordInput.value !== ACTIVITY_LOG_PASSWORD) {
         document.getElementById("activityPasswordError").classList.remove("hidden");
-        passwordInput.select();
-        return;
+        passwordInput.select(); return;
       }
-
       document.getElementById("activityPasswordView").classList.add("hidden");
       document.getElementById("activityLogContentView").classList.remove("hidden");
       document.getElementById("activityLogStatus").textContent = "Son işlemler yükleniyor...";
@@ -986,9 +856,7 @@
         const response = await fetch(url);
         if (!response.ok) throw new Error("Activity read failed");
         const data = await response.json();
-        const entries = Object.values(data || {})
-          .filter(entry => entry && typeof entry === "object")
-          .sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
+        const entries = Object.values(data || {}).filter(entry => entry && typeof entry === "object").sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
 
         list.replaceChildren();
         if (entries.length === 0) {
@@ -1004,24 +872,23 @@
           actor.className = "text-[11px] font-semibold text-cyan-300";
           actor.textContent = entry.actor || "Anonim ziyaretçi";
           const description = document.createElement("p");
-          description.className = "mt-0.5 break-words text-sm text-slate-200";
+          description.className = "mt-0.5 break-words text-sm text-slate-200 font-bold";
           description.textContent = entry.description || "İşlem";
           const time = document.createElement("time");
           time.className = "mt-1 block text-[10px] text-slate-500";
           const timestamp = Number(entry.timestamp);
           time.dateTime = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : "";
-          time.textContent = Number.isFinite(timestamp)
-            ? new Date(timestamp).toLocaleString("tr-TR")
-            : "Tarih bilinmiyor";
+          time.textContent = Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString("tr-TR") : "Tarih bilinmiyor";
           row.append(actor, description, time);
+          
           if (entry.details) {
             const details = document.createElement("details");
             details.className = "mt-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2";
             const summary = document.createElement("summary");
-            summary.className = "cursor-pointer text-xs font-semibold text-cyan-300";
-            summary.textContent = "İstek / yanıt ayrıntıları";
+            summary.className = "cursor-pointer text-xs font-semibold text-cyan-300 outline-none";
+            summary.textContent = "İstek / Yanıt Detaylarını Gör";
             const content = document.createElement("pre");
-            content.className = "mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-[10px] leading-relaxed text-slate-300";
+            content.className = "mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-[10px] leading-relaxed text-slate-300 font-mono-code";
             content.textContent = entry.details;
             details.append(summary, content);
             row.appendChild(details);
@@ -1037,246 +904,148 @@
     function saveProgressToLocal() {
       try {
         localStorage.setItem("alchemy_inventory_v3", JSON.stringify(inventory));
-        const serializableCanvas = canvasItems.map(ci => ({
-          data: ci.data,
-          x: ci.x,
-          y: ci.y
-        }));
+        const serializableCanvas = canvasItems.map(ci => ({ data: ci.data, x: ci.x, y: ci.y }));
         localStorage.setItem("alchemy_canvas_v3", JSON.stringify(serializableCanvas));
       } catch (e) {}
     }
 
     function saveMissionProgress() {
-      try {
-        localStorage.setItem("alchemy_missions_v1", JSON.stringify(missionProgress));
-      } catch (e) {}
+      try { localStorage.setItem("alchemy_missions_v1", JSON.stringify(missionProgress)); } catch (e) {}
     }
 
     function loadProgressFromLocal() {
       try {
         const savedInv = JSON.parse(localStorage.getItem("alchemy_inventory_v3") || "null");
-        if (Array.isArray(savedInv) && savedInv.length > 0) {
-          inventory = savedInv;
-        } else {
-          inventory = [...STARTER_ELEMENTS];
-        }
-      } catch (e) {
-        inventory = [...STARTER_ELEMENTS];
-      }
-
+        inventory = Array.isArray(savedInv) && savedInv.length > 0 ? savedInv : [...STARTER_ELEMENTS];
+      } catch (e) { inventory = [...STARTER_ELEMENTS]; }
       STARTER_ELEMENTS.forEach(s => {
-        if (!inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === s.name.toLocaleLowerCase("tr-TR"))) {
-          inventory.push({ ...s });
-        }
+        if (!inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === s.name.toLocaleLowerCase("tr-TR"))) inventory.push({ ...s });
       });
-
-      inventory.forEach(item => {
-        item.formula = getElementFormulaText(item);
-      });
+      inventory.forEach(item => { item.formula = getElementFormulaText(item); });
     }
 
     /* =========================================================================
-       GÖREV SİSTEMİ MANTIĞI
+       GÖREV SİSTEMİ
        ========================================================================= */
     function initializeMissionProgress() {
       try {
         const saved = JSON.parse(localStorage.getItem("alchemy_missions_v1") || "null");
-        if (saved && typeof saved === "object") {
-          missionProgress = {
-            bio: saved.bio || 0,
-            industry: saved.industry || 0,
-            tech: saved.tech || 0
-          };
-        }
-      } catch (e) {
-        missionProgress = { bio: 0, industry: 0, tech: 0 };
-      }
-
-      // Mevcut envanterdeki elementlere göre görevleri otomatik tamamla
+        if (saved && typeof saved === "object") missionProgress = { bio: saved.bio || 0, industry: saved.industry || 0, tech: saved.tech || 0 };
+      } catch (e) { missionProgress = { bio: 0, industry: 0, tech: 0 }; }
       MISSIONS.forEach(mission => {
         let completed = missionProgress[mission.id] || 0;
         while (completed < mission.steps.length) {
-          const step = mission.steps[completed];
-          const has = inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === step.name.toLocaleLowerCase("tr-TR"));
-          if (has) completed++;
+          if (inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === mission.steps[completed].name.toLocaleLowerCase("tr-TR"))) completed++;
           else break;
         }
         missionProgress[mission.id] = completed;
       });
-
       saveMissionProgress();
     }
 
     function checkMissionProgress(newElementName) {
       const lower = (newElementName || "").toLocaleLowerCase("tr-TR");
       let anyChanged = false;
-
       MISSIONS.forEach(mission => {
         let completed = missionProgress[mission.id] || 0;
         if (completed >= mission.steps.length) return;
-
         const currentStep = mission.steps[completed];
         if (currentStep.name.toLocaleLowerCase("tr-TR") !== lower) return;
-
+        
         const justCompletedStep = currentStep;
         completed++;
-
-        // Envanterde zaten olan bir sonraki adımları otomatik tamamla
         while (completed < mission.steps.length) {
-          const nextStep = mission.steps[completed];
-          const has = inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === nextStep.name.toLocaleLowerCase("tr-TR"));
-          if (has) completed++;
+          if (inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === mission.steps[completed].name.toLocaleLowerCase("tr-TR"))) completed++;
           else break;
         }
-
         missionProgress[mission.id] = completed;
         anyChanged = true;
-
-        // Bildirimler
         showToast(`✅ Görev Tamamlandı: ${mission.emoji} ${justCompletedStep.label}`, "mission");
         playSound("success");
-
+        
         if (completed >= mission.steps.length) {
           setTimeout(() => celebrateMissionComplete(mission), 1400);
         } else {
           const nextStep = mission.steps[completed];
-          setTimeout(() => {
-            showToast(`🎯 Bir sonraki hedef: ${nextStep.label}`, "mission");
-          }, 1400);
+          setTimeout(() => showToast(`🎯 Bir sonraki hedef: ${nextStep.label}`, "mission"), 1400);
         }
-
-        // Panel flaş efekti
         const panel = document.getElementById("missionPanel");
-        if (panel) {
-          panel.classList.remove("mission-flash");
-          void panel.offsetWidth;
-          panel.classList.add("mission-flash");
-        }
+        if (panel) { panel.classList.remove("mission-flash"); void panel.offsetWidth; panel.classList.add("mission-flash"); }
       });
-
-      if (anyChanged) {
-        saveMissionProgress();
-        renderMissionPanel();
-      }
+      if (anyChanged) { saveMissionProgress(); renderMissionPanel(); }
     }
 
     function celebrateMissionComplete(mission) {
-      // Ekran flaşı
       const overlay = document.createElement("div");
       overlay.style.cssText = "position:fixed;inset:0;background:rgba(16,185,129,0.18);z-index:70;pointer-events:none;transition:opacity 0.9s ease-out;";
       document.body.appendChild(overlay);
       requestAnimationFrame(() => { overlay.style.opacity = "0"; });
       setTimeout(() => overlay.remove(), 950);
-
-      // Zafer toast'u
       const container = document.getElementById("toastContainer");
       if (container) {
         const el = document.createElement("div");
         el.className = "px-5 py-3 rounded-2xl border-2 border-yellow-300 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-sm font-extrabold shadow-2xl shadow-amber-500/40";
         el.textContent = `🏆 TEBRİKLER! "${mission.name}" aşaması tamamen tamamlandı!`;
         container.appendChild(el);
-        setTimeout(() => {
-          el.style.opacity = "0";
-          el.style.transform = "translateY(-8px)";
-          setTimeout(() => el.remove(), 400);
-        }, 4200);
+        setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(-8px)"; setTimeout(() => el.remove(), 400); }, 4200);
       }
-
-      playSound("success");
-      setTimeout(() => playSound("success"), 180);
-      setTimeout(() => playSound("success"), 360);
+      playSound("success"); setTimeout(() => playSound("success"), 180); setTimeout(() => playSound("success"), 360);
     }
 
     function renderMissionPanel() {
       const compactRow = document.getElementById("missionCompactRow");
       const expandedBody = document.getElementById("missionExpandedBody");
       if (!compactRow) return;
-
-      // Kompakt kartlar
       compactRow.innerHTML = "";
       MISSIONS.forEach((mission, idx) => {
         const completed = missionProgress[mission.id] || 0;
         const total = mission.steps.length;
         const isDone = completed >= total;
         const currentStep = isDone ? null : mission.steps[completed];
-
         const card = document.createElement("div");
-        card.className = `flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] shrink-0 whitespace-nowrap transition ${
-          isDone
-            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-200"
-            : "bg-cyan-500/15 border-cyan-500/50 text-cyan-100 ring-1 ring-cyan-500/30"
-        }`;
+        card.className = `flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg border text-[11px] shrink-0 whitespace-nowrap transition ${isDone ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-200" : "bg-cyan-500/15 border-cyan-500/50 text-cyan-100 ring-1 ring-cyan-500/30"}`;
         card.title = `${mission.name} - ${isDone ? "Tamamlandı" : currentStep.label}`;
-
         const dotsHtml = mission.steps.map((s, i) => {
           let dotClass = "bg-slate-600";
           if (i < completed) dotClass = "bg-emerald-400";
           else if (i === completed) dotClass = "bg-cyan-400 mission-pulse";
           return `<span class="inline-block w-1.5 h-1.5 rounded-full ${dotClass}"></span>`;
         }).join("");
-
         card.innerHTML = `
           <span class="text-sm shrink-0">${isDone ? "✅" : mission.emoji}</span>
           <span class="font-extrabold hidden xs:inline">${idx + 1}.</span>
           <span class="font-bold">${mission.name}</span>
           <span class="hidden md:inline text-[10px] opacity-80 font-normal">${isDone ? "Tamamlandı" : "• " + currentStep.label}</span>
           <span class="flex items-center gap-0.5 ml-0.5">${dotsHtml}</span>
-          <span class="font-mono-code text-[10px] opacity-70">${completed}/${total}</span>
-        `;
-
-        card.onclick = () => {
-          if (!missionExpanded) toggleMissionExpanded();
-          const target = document.getElementById(`missionCard-${mission.id}`);
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        };
-
+          <span class="font-mono-code text-[10px] opacity-70">${completed}/${total}</span>`;
+        card.onclick = () => { if (!missionExpanded) toggleMissionExpanded(); const t = document.getElementById(`missionCard-${mission.id}`); if (t) t.scrollIntoView({ behavior: "smooth", block: "nearest" }); };
         compactRow.appendChild(card);
       });
-
-      // Genişletilmiş kartlar
       if (!expandedBody) return;
       expandedBody.innerHTML = "";
       MISSIONS.forEach((mission, idx) => {
         const completed = missionProgress[mission.id] || 0;
         const total = mission.steps.length;
         const isDone = completed >= total;
-
         const card = document.createElement("div");
         card.id = `missionCard-${mission.id}`;
-        card.className = `p-2.5 rounded-xl border transition ${
-          isDone
-            ? "bg-emerald-950/40 border-emerald-500/50"
-            : "bg-slate-800/60 border-slate-700"
-        }`;
-
+        card.className = `p-2.5 rounded-xl border transition ${isDone ? "bg-emerald-950/40 border-emerald-500/50" : "bg-slate-800/60 border-slate-700"}`;
         const stepsHtml = mission.steps.map((s, i) => {
           const stepDone = i < completed;
           const stepActive = i === completed;
-          return `
-            <div class="flex items-center gap-2 px-2 py-1 rounded-md text-[11px] ${
-              stepDone ? "bg-emerald-500/10 text-emerald-300"
-                : stepActive ? "bg-cyan-500/20 text-cyan-100 font-bold ring-1 ring-cyan-500/40"
-                : "text-slate-500"
-            }">
-              <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold shrink-0 ${
-                stepDone ? "bg-emerald-500 text-slate-950"
-                  : stepActive ? "bg-cyan-500 text-slate-950"
-                  : "bg-slate-700 text-slate-500"
-              }">${stepDone ? "✓" : (i + 1)}</span>
-              <span class="truncate">${s.label}</span>
-              ${stepActive ? '<span class="ml-auto text-[9px] text-cyan-300 font-extrabold tracking-wider">▶ AKTİF</span>' : ""}
-            </div>
-          `;
+          return `<div class="flex items-center gap-2 px-2 py-1 rounded-md text-[11px] ${stepDone ? "bg-emerald-500/10 text-emerald-300" : stepActive ? "bg-cyan-500/20 text-cyan-100 font-bold ring-1 ring-cyan-500/40" : "text-slate-500"}">
+            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold shrink-0 ${stepDone ? "bg-emerald-500 text-slate-950" : stepActive ? "bg-cyan-500 text-slate-950" : "bg-slate-700 text-slate-500"}">${stepDone ? "✓" : (i + 1)}</span>
+            <span class="truncate">${s.label}</span>
+            ${stepActive ? '<span class="ml-auto text-[9px] text-cyan-300 font-extrabold tracking-wider">▶ AKTİF</span>' : ""}
+          </div>`;
         }).join("");
-
         card.innerHTML = `
           <div class="flex items-center gap-1.5 mb-2">
             <span class="text-base">${mission.emoji}</span>
             <span class="text-xs font-extrabold text-white">Amaç ${idx + 1}: ${mission.name}</span>
             ${isDone ? '<span class="ml-auto text-[10px] text-emerald-400 font-extrabold">✓ TAMAMLANDI</span>' : `<span class="ml-auto text-[10px] text-slate-400 font-mono-code">${completed}/${total}</span>`}
           </div>
-          <div class="space-y-1">${stepsHtml}</div>
-        `;
+          <div class="space-y-1">${stepsHtml}</div>`;
         expandedBody.appendChild(card);
       });
     }
@@ -1285,62 +1054,43 @@
       missionExpanded = !missionExpanded;
       const body = document.getElementById("missionExpandedBody");
       const icon = document.getElementById("missionToggleIcon");
-      if (missionExpanded) {
-        body.classList.remove("hidden");
-        if (icon) icon.style.transform = "rotate(180deg)";
-      } else {
-        body.classList.add("hidden");
-        if (icon) icon.style.transform = "rotate(0deg)";
-      }
+      if (missionExpanded) { body.classList.remove("hidden"); if (icon) icon.style.transform = "rotate(180deg)"; }
+      else { body.classList.add("hidden"); if (icon) icon.style.transform = "rotate(0deg)"; }
     }
 
     /* =========================================================================
-       5. ENVANTER VE SEÇİM PENCERESİ RENDER (FORMÜL ALT YAZILI)
+       5. ENVANTER RENDER
        ========================================================================= */
     function setCategoryFilter(cat) {
       activeCategory = cat;
       document.querySelectorAll(".cat-tab").forEach(btn => {
-        if (btn.getAttribute("data-cat") === cat) {
-          btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500 text-slate-950 shrink-0 transition";
-        } else {
-          btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition";
-        }
+        if (btn.getAttribute("data-cat") === cat) btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500 text-slate-950 shrink-0 transition";
+        else btn.className = "cat-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 shrink-0 transition";
       });
       renderInventory();
     }
 
-    function clearSidebarSearch() {
-      const inp = document.getElementById("sidebarSearchInput");
-      if (inp) {
-        inp.value = "";
-        renderInventory();
-      }
-    }
+    function clearSidebarSearch() { const i = document.getElementById("sidebarSearchInput"); if (i) { i.value = ""; renderInventory(); } }
 
     function renderInventory() {
       const listEl = document.getElementById("sidebarInventoryList");
       const query = (document.getElementById("sidebarSearchInput")?.value || "").toLocaleLowerCase("tr-TR").trim();
-
       document.getElementById("discoveredCountBadge").textContent = inventory.length;
       document.getElementById("sidebarCountText").textContent = `${inventory.length} Öğe`;
       document.getElementById("mobileInvCount").textContent = inventory.length;
-
       if (!listEl) return;
       listEl.innerHTML = "";
-
       const filtered = inventory.filter(item => {
         const matchCat = activeCategory === "all" || item.cat === activeCategory;
-        const formulaStr = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
-        const matchQuery = !query || item.name.toLocaleLowerCase("tr-TR").includes(query) || formulaStr.includes(query);
+        const fStr = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
+        const matchQuery = !query || item.name.toLocaleLowerCase("tr-TR").includes(query) || fStr.includes(query);
         return matchCat && matchQuery;
       });
-
       filtered.forEach(item => {
         const formulaText = getElementFormulaText(item);
         const card = document.createElement("div");
         card.className = "px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-cyan-400/60 text-slate-100 flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing transition shadow-sm";
         card.title = `${item.name}\nFormül: ${formulaText}`;
-
         card.innerHTML = `
           <div class="flex items-center gap-2.5 min-w-0">
             <span class="text-xl shrink-0">${item.emoji || "🧪"}</span>
@@ -1349,27 +1099,20 @@
               <span class="text-[10px] font-mono-code text-cyan-400/90 truncate">⚗️ ${formulaText}</span>
             </div>
           </div>
-          <span class="text-xs text-slate-400 shrink-0 font-bold">＋</span>
-        `;
-
+          <span class="text-xs text-slate-400 shrink-0 font-bold">＋</span>`;
         setupSidebarItemInteraction(card, item);
         listEl.appendChild(card);
       });
     }
 
     function openElementPickerModal() {
-      const modal = document.getElementById("pickerModal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-      const inp = document.getElementById("pickerSearchInput");
-      if (inp) inp.value = "";
+      const m = document.getElementById("pickerModal"); m.classList.remove("hidden"); m.classList.add("flex");
+      const i = document.getElementById("pickerSearchInput"); if (i) i.value = "";
       renderPickerItems();
     }
 
     function closeElementPickerModal() {
-      const modal = document.getElementById("pickerModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
+      const m = document.getElementById("pickerModal"); m.classList.add("hidden"); m.classList.remove("flex");
     }
 
     function renderPickerItems() {
@@ -1377,12 +1120,10 @@
       if (!grid) return;
       const q = (document.getElementById("pickerSearchInput")?.value || "").toLocaleLowerCase("tr-TR").trim();
       grid.innerHTML = "";
-
       const filtered = inventory.filter(item => {
-        const fText = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
-        return !q || item.name.toLocaleLowerCase("tr-TR").includes(q) || fText.includes(q);
+        const f = getElementFormulaText(item).toLocaleLowerCase("tr-TR");
+        return !q || item.name.toLocaleLowerCase("tr-TR").includes(q) || f.includes(q);
       });
-
       filtered.forEach(item => {
         const formulaText = getElementFormulaText(item);
         const btn = document.createElement("button");
@@ -1393,51 +1134,36 @@
           <div class="flex flex-col leading-tight min-w-0">
             <span class="text-xs font-extrabold text-white truncate">${item.name}</span>
             <span class="text-[10px] font-mono-code text-cyan-300/90 truncate">⚗️ ${formulaText}</span>
-          </div>
-        `;
-        btn.onclick = () => {
-          spawnElementNearCenter(item);
-          playSound("spawn");
-          closeElementPickerModal();
-        };
+          </div>`;
+        btn.onclick = () => { spawnElementNearCenter(item); playSound("spawn"); closeElementPickerModal(); };
         grid.appendChild(btn);
       });
     }
 
     /* =========================================================================
-       6. TUVAL ÜZERİNDE ELEMENT OLUŞTURMA VE SÜRÜKLE-BIRAK MOTORU
+       6. TUVAL MOTORU
        ========================================================================= */
     function clampCanvasPosition(x, y) {
       const canvas = document.getElementById("alchemyCanvas");
       if (!canvas) return { x: 160, y: 160 };
       const rect = canvas.getBoundingClientRect();
-      const padX = 75;
-      const padY = 42;
+      const padX = 75, padY = 42;
       const maxX = Math.max(padX, rect.width - padX);
       const maxY = Math.max(padY, rect.height - padY);
-      return {
-        x: Math.min(Math.max(x, padX), maxX),
-        y: Math.min(Math.max(y, padY), maxY)
-      };
+      return { x: Math.min(Math.max(x, padX), maxX), y: Math.min(Math.max(y, padY), maxY) };
     }
 
     function updateCanvasEmptyState() {
       const hint = document.getElementById("canvasEmptyHint");
       const countTxt = document.getElementById("canvasItemCountText");
-      if (hint) {
-        hint.style.opacity = canvasItems.length === 0 ? "1" : "0";
-      }
-      if (countTxt) {
-        countTxt.textContent = `Tuvalde: ${canvasItems.length} öğe`;
-      }
+      if (hint) hint.style.opacity = canvasItems.length === 0 ? "1" : "0";
+      if (countTxt) countTxt.textContent = `Tuvalde: ${canvasItems.length} öğe`;
     }
 
     function spawnElementNearCenter(itemData) {
-      const canvas = document.getElementById("alchemyCanvas");
-      const rect = canvas.getBoundingClientRect();
-      const jitterX = (Math.random() - 0.5) * 120;
-      const jitterY = (Math.random() - 0.5) * 90;
-      const spawned = spawnElementOnCanvas(itemData, rect.width / 2 + jitterX, rect.height / 2 + jitterY);
+      const rect = document.getElementById("alchemyCanvas").getBoundingClientRect();
+      const jX = (Math.random() - 0.5) * 120, jY = (Math.random() - 0.5) * 90;
+      const spawned = spawnElementOnCanvas(itemData, rect.width / 2 + jX, rect.height / 2 + jY);
       if (spawned) logSharedActivity(`Tuvale ${itemData.name} eklendi.`);
       return spawned;
     }
@@ -1445,35 +1171,22 @@
     function spawnElementOnCanvas(itemData, x, y, skipSave = false) {
       const layer = document.getElementById("canvasItemsLayer");
       if (!layer) return null;
-
-      const enrichedData = {
-        ...itemData,
-        formula: getElementFormulaText(itemData)
-      };
-
+      const enrichedData = { ...itemData, formula: getElementFormulaText(itemData) };
       const pos = clampCanvasPosition(x, y);
       const profile = getElementVisualProfile(enrichedData);
       const id = nextCanvasId++;
-
       const el = document.createElement("div");
       el.className = `element-card spawn-pop absolute px-3 py-2 rounded-2xl ${profile.cardBg} border-2 ${profile.cardBorder} text-white shadow-xl flex items-center gap-2.5 cursor-grab active:cursor-grabbing select-none`;
-      el.style.left = `${pos.x}px`;
-      el.style.top = `${pos.y}px`;
-      el.style.transform = "translate(-50%, -50%)";
-      el.style.zIndex = "15";
-
+      el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
+      el.style.transform = "translate(-50%, -50%)"; el.style.zIndex = "15";
       el.innerHTML = `
         <span class="text-xl sm:text-2xl filter drop-shadow select-none shrink-0">${enrichedData.emoji || "🧪"}</span>
         <div class="flex flex-col leading-tight select-none min-w-0">
           <span class="font-extrabold tracking-tight text-xs sm:text-sm text-white truncate max-w-[140px] sm:max-w-[180px]">${enrichedData.name}</span>
           <span class="text-[10px] sm:text-[11px] font-mono-code ${profile.formulaColor} truncate max-w-[145px] sm:max-w-[190px]">⚗️ ${enrichedData.formula}</span>
-        </div>
-      `;
-
+        </div>`;
       const record = { id, el, data: enrichedData, profile, x: pos.x, y: pos.y };
-      canvasItems.push(record);
-      layer.appendChild(el);
-
+      canvasItems.push(record); layer.appendChild(el);
       setupCanvasCardDrag(record);
       updateCanvasEmptyState();
       if (!skipSave) saveProgressToLocal();
@@ -1484,27 +1197,19 @@
       const idx = canvasItems.findIndex(i => i.id === record.id);
       if (idx !== -1) canvasItems.splice(idx, 1);
       if (record.el && record.el.parentNode) record.el.remove();
-      updateCanvasEmptyState();
-      saveProgressToLocal();
+      updateCanvasEmptyState(); saveProgressToLocal();
     }
 
     function clearCanvas() {
-      if (canvasItems.length > 0) {
-        logSharedActivity(`Tuval temizlendi (${canvasItems.length} öğe).`);
-      }
-      canvasItems.forEach(item => {
-        if (item.el) item.el.remove();
-      });
-      canvasItems = [];
-      playSound("trash");
-      updateCanvasEmptyState();
-      saveProgressToLocal();
+      if (canvasItems.length > 0) logSharedActivity(`Tuval temizlendi (${canvasItems.length} öğe).`);
+      canvasItems.forEach(item => { if (item.el) item.el.remove(); });
+      canvasItems = []; playSound("trash");
+      updateCanvasEmptyState(); saveProgressToLocal();
     }
 
     function spawnRandomPair() {
       if (inventory.length === 0) return;
-      const canvas = document.getElementById("alchemyCanvas");
-      const rect = canvas.getBoundingClientRect();
+      const rect = document.getElementById("alchemyCanvas").getBoundingClientRect();
       const a = inventory[Math.floor(Math.random() * inventory.length)];
       const b = inventory[Math.floor(Math.random() * inventory.length)];
       logSharedActivity(`Rastgele ikili tuvale eklendi: ${a.name} ve ${b.name}.`);
@@ -1514,210 +1219,115 @@
     }
 
     function setupSidebarItemInteraction(cardEl, itemData) {
-      let startX = 0;
-      let startY = 0;
-      let isDragging = false;
-      let ghostEl = null;
-
+      let startX = 0, startY = 0, isDragging = false, ghostEl = null;
       const onPointerDown = (e) => {
         if (e.button !== undefined && e.button !== 0) return;
-        startX = e.clientX;
-        startY = e.clientY;
-        isDragging = false;
-
-        const onPointerMove = (moveEv) => {
-          const dist = Math.hypot(moveEv.clientX - startX, moveEv.clientY - startY);
+        startX = e.clientX; startY = e.clientY; isDragging = false;
+        const onMove = (mv) => {
+          const dist = Math.hypot(mv.clientX - startX, mv.clientY - startY);
           if (!isDragging && dist > 8) {
             isDragging = true;
-            const formulaText = getElementFormulaText(itemData);
+            const f = getElementFormulaText(itemData);
             ghostEl = document.createElement("div");
             ghostEl.className = "fixed px-3 py-2 rounded-2xl bg-slate-900 border-2 border-cyan-400 text-white flex items-center gap-2 text-xs font-bold pointer-events-none z-50 shadow-2xl";
             ghostEl.style.transform = "translate(-50%, -50%)";
-            ghostEl.innerHTML = `
-              <span class="text-xl">${itemData.emoji || "🧪"}</span>
-              <div class="flex flex-col leading-tight">
-                <span class="font-extrabold">${itemData.name}</span>
-                <span class="text-[10px] font-mono-code text-cyan-300">⚗️ ${formulaText}</span>
-              </div>
-            `;
+            ghostEl.innerHTML = `<span class="text-xl">${itemData.emoji || "🧪"}</span><div class="flex flex-col leading-tight"><span class="font-extrabold">${itemData.name}</span><span class="text-[10px] font-mono-code text-cyan-300">⚗️ ${f}</span></div>`;
             document.body.appendChild(ghostEl);
           }
-          if (isDragging && ghostEl) {
-            ghostEl.style.left = `${moveEv.clientX}px`;
-            ghostEl.style.top = `${moveEv.clientY}px`;
-          }
+          if (isDragging && ghostEl) { ghostEl.style.left = `${mv.clientX}px`; ghostEl.style.top = `${mv.clientY}px`; }
         };
-
-        const onPointerUp = (upEv) => {
-          window.removeEventListener("pointermove", onPointerMove);
-          window.removeEventListener("pointerup", onPointerUp);
-
-          if (ghostEl) {
-            ghostEl.remove();
-            ghostEl = null;
-          }
-
-          const canvas = document.getElementById("alchemyCanvas");
-          const rect = canvas.getBoundingClientRect();
-
+        const onUp = (up) => {
+          window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
+          if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+          const rect = document.getElementById("alchemyCanvas").getBoundingClientRect();
           if (isDragging) {
-            if (
-              upEv.clientX >= rect.left &&
-              upEv.clientX <= rect.right &&
-              upEv.clientY >= rect.top &&
-              upEv.clientY <= rect.bottom
-            ) {
-              const localX = upEv.clientX - rect.left;
-              const localY = upEv.clientY - rect.top;
-              const spawned = spawnElementOnCanvas(itemData, localX, localY);
+            if (up.clientX >= rect.left && up.clientX <= rect.right && up.clientY >= rect.top && up.clientY <= rect.bottom) {
+              const spawned = spawnElementOnCanvas(itemData, up.clientX - rect.left, up.clientY - rect.top);
               if (spawned) logSharedActivity(`Tuvale ${itemData.name} eklendi.`);
-              playSound("spawn");
-              if (spawned) checkAndTriggerMerge(spawned);
+              playSound("spawn"); if (spawned) checkAndTriggerMerge(spawned);
             }
-          } else {
-            spawnElementNearCenter(itemData);
-            playSound("spawn");
-          }
+          } else { spawnElementNearCenter(itemData); playSound("spawn"); }
         };
-
-        window.addEventListener("pointermove", onPointerMove);
-        window.addEventListener("pointerup", onPointerUp);
+        window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
       };
-
       cardEl.addEventListener("pointerdown", onPointerDown);
     }
 
     function setupCanvasCardDrag(record) {
       const el = record.el;
-      let offsetX = 0;
-      let offsetY = 0;
-      let highlightedTarget = null;
-      let lastTapTime = 0;
-
+      let offsetX = 0, offsetY = 0, highlightedTarget = null, lastTapTime = 0;
       el.addEventListener("pointerdown", (e) => {
         if (e.button !== undefined && e.button !== 0) return;
         e.stopPropagation();
-
         const now = Date.now();
         if (now - lastTapTime < 280) {
           const clone = spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
           if (clone) logSharedActivity(`${record.data.name} çoğaltıldı.`);
-          playSound("spawn");
-          lastTapTime = 0;
-          return;
+          playSound("spawn"); lastTapTime = 0; return;
         }
         lastTapTime = now;
-
         const canvas = document.getElementById("alchemyCanvas");
         const rect = canvas.getBoundingClientRect();
         offsetX = e.clientX - rect.left - record.x;
         offsetY = e.clientY - rect.top - record.y;
-
         el.style.zIndex = "50";
-
-        const onMove = (moveEv) => {
+        const onMove = (mv) => {
           const r = canvas.getBoundingClientRect();
-          const rawX = moveEv.clientX - r.left - offsetX;
-          const rawY = moveEv.clientY - r.top - offsetY;
-          const clamped = clampCanvasPosition(rawX, rawY);
-
-          record.x = clamped.x;
-          record.y = clamped.y;
-          el.style.left = `${clamped.x}px`;
-          el.style.top = `${clamped.y}px`;
-
+          const clamped = clampCanvasPosition(mv.clientX - r.left - offsetX, mv.clientY - r.top - offsetY);
+          record.x = clamped.x; record.y = clamped.y;
+          el.style.left = `${clamped.x}px`; el.style.top = `${clamped.y}px`;
           const trash = document.getElementById("trashDropZone");
-          const trashRect = trash.getBoundingClientRect();
-          const overTrash =
-            moveEv.clientX >= trashRect.left &&
-            moveEv.clientX <= trashRect.right &&
-            moveEv.clientY >= trashRect.top &&
-            moveEv.clientY <= trashRect.bottom;
-
+          const tr = trash.getBoundingClientRect();
+          const overTrash = mv.clientX >= tr.left && mv.clientX <= tr.right && mv.clientY >= tr.top && mv.clientY <= tr.bottom;
           trash.style.borderColor = overTrash ? "#f43f5e" : "";
           trash.style.transform = overTrash ? "scale(1.08)" : "";
-
-          const candidate = findMergeCandidate(record);
-          if (highlightedTarget && highlightedTarget !== candidate) {
-            highlightedTarget.el.classList.remove("merge-target");
-          }
-          if (candidate) {
-            candidate.el.classList.add("merge-target");
-          }
-          highlightedTarget = candidate;
+          const cand = findMergeCandidate(record);
+          if (highlightedTarget && highlightedTarget !== cand) highlightedTarget.el.classList.remove("merge-target");
+          if (cand) cand.el.classList.add("merge-target");
+          highlightedTarget = cand;
         };
-
-        const onUp = (upEv) => {
-          window.removeEventListener("pointermove", onMove);
-          window.removeEventListener("pointerup", onUp);
+        const onUp = (up) => {
+          window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
           el.style.zIndex = "15";
-
           const trash = document.getElementById("trashDropZone");
-          trash.style.borderColor = "";
-          trash.style.transform = "";
-
-          if (highlightedTarget) {
-            highlightedTarget.el.classList.remove("merge-target");
-            highlightedTarget = null;
+          trash.style.borderColor = ""; trash.style.transform = "";
+          if (highlightedTarget) { highlightedTarget.el.classList.remove("merge-target"); highlightedTarget = null; }
+          const tr = trash.getBoundingClientRect();
+          if (up.clientX >= tr.left && up.clientX <= tr.right && up.clientY >= tr.top && up.clientY <= tr.bottom) {
+            playSound("trash"); logSharedActivity(`${record.data.name} tuvalden silindi.`);
+            removeCanvasItem(record); return;
           }
-
-          const trashRect = trash.getBoundingClientRect();
-          if (
-            upEv.clientX >= trashRect.left &&
-            upEv.clientX <= trashRect.right &&
-            upEv.clientY >= trashRect.top &&
-            upEv.clientY <= trashRect.bottom
-          ) {
-            playSound("trash");
-            logSharedActivity(`${record.data.name} tuvalden silindi.`);
-            removeCanvasItem(record);
-            return;
-          }
-
-          checkAndTriggerMerge(record);
-          saveProgressToLocal();
+          checkAndTriggerMerge(record); saveProgressToLocal();
         };
-
-        window.addEventListener("pointermove", onMove);
-        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
       });
     }
 
     function findMergeCandidate(sourceRecord) {
-      let best = null;
-      let minDist = 72;
+      let best = null, minDist = 72;
       for (const other of canvasItems) {
         if (other.id === sourceRecord.id || other.merging) continue;
         const d = Math.hypot(other.x - sourceRecord.x, other.y - sourceRecord.y);
-        if (d < minDist) {
-          minDist = d;
-          best = other;
-        }
+        if (d < minDist) { minDist = d; best = other; }
       }
       return best;
     }
 
     function checkAndTriggerMerge(sourceRecord) {
       const target = findMergeCandidate(sourceRecord);
-      if (target) {
-        combineTwoCanvasRecords(sourceRecord, target);
-      }
+      if (target) combineTwoCanvasRecords(sourceRecord, target);
     }
 
     /* =========================================================================
-       7. SENTEZ MOTORU (YEREL -> FIREBASE -> GEMINI AI) + FORMÜL KAYDI
+       7. SENTEZ MOTORU
        ========================================================================= */
     function createSynthesisPuff(x, y, statusText) {
       const fxLayer = document.getElementById("canvasFxLayer");
       const puff = document.createElement("div");
       puff.className = "synthesis-puff absolute z-40 px-3.5 py-2 rounded-2xl bg-slate-900/95 border-2 border-cyan-400 text-xs font-bold text-white shadow-2xl flex items-center gap-2";
-      puff.style.left = `${x}px`;
-      puff.style.top = `${y}px`;
+      puff.style.left = `${x}px`; puff.style.top = `${y}px`;
       puff.style.transform = "translate(-50%, -50%)";
-      puff.innerHTML = `
-        <span class="text-base animate-spin">⚗️</span>
-        <span class="puff-label">${statusText}</span>
-      `;
+      puff.innerHTML = `<span class="text-base animate-spin">⚗️</span><span class="puff-label">${statusText}</span>`;
       fxLayer.appendChild(puff);
       return puff;
     }
@@ -1729,17 +1339,10 @@
     }
 
     async function combineTwoCanvasRecords(recA, recB) {
-      recA.merging = true;
-      recB.merging = true;
-
-      const itemA = recA.data;
-      const itemB = recB.data;
-      const midX = (recA.x + recB.x) / 2;
-      const midY = (recA.y + recB.y) / 2;
-
-      removeCanvasItem(recA);
-      removeCanvasItem(recB);
-
+      recA.merging = true; recB.merging = true;
+      const itemA = recA.data, itemB = recB.data;
+      const midX = (recA.x + recB.x) / 2, midY = (recA.y + recB.y) / 2;
+      removeCanvasItem(recA); removeCanvasItem(recB);
       const normKey = normalizeKey(itemA.name, itemB.name);
       const exactKey = [itemA.name.toLocaleLowerCase("tr-TR"), itemB.name.toLocaleLowerCase("tr-TR")].sort().join("_");
       const recipeFormulaString = `${itemA.name} + ${itemB.name}`;
@@ -1747,18 +1350,13 @@
       if (REACTION_CACHE[normKey] === "NO_REACTION") {
         showToast(`"${itemA.name}" ve "${itemB.name}" birleşmiyor.`, "warn");
         playSound("fail");
-        spawnElementOnCanvas(itemA, midX - 42, midY);
-        spawnElementOnCanvas(itemB, midX + 42, midY);
+        spawnElementOnCanvas(itemA, midX - 42, midY); spawnElementOnCanvas(itemB, midX + 42, midY);
         return;
       }
 
       const localMatch = NORMALIZED_RECIPES[normKey] || NORMALIZED_RECIPES[exactKey] || MASTER_RECIPES[exactKey];
       if (localMatch) {
-        const resultElement = {
-          ...localMatch,
-          formula: localMatch.formula || recipeFormulaString
-        };
-        completeSynthesisSuccess(midX, midY, resultElement, false, [itemA.name, itemB.name]);
+        completeSynthesisSuccess(midX, midY, { ...localMatch, formula: localMatch.formula || recipeFormulaString }, false, [itemA.name, itemB.name]);
         return;
       }
 
@@ -1772,14 +1370,10 @@
             REACTION_CACHE[normKey] = "NO_REACTION";
             showToast(`"${itemA.name}" ve "${itemB.name}" tepkimeye girmedi.`, "warn");
             playSound("fail");
-            spawnElementOnCanvas(itemA, midX - 42, midY);
-            spawnElementOnCanvas(itemB, midX + 42, midY);
+            spawnElementOnCanvas(itemA, midX - 42, midY); spawnElementOnCanvas(itemB, midX + 42, midY);
             return;
           }
-          const enrichedFb = {
-            ...fbResult,
-            formula: fbResult.formula || recipeFormulaString
-          };
+          const enrichedFb = { ...fbResult, formula: fbResult.formula || recipeFormulaString };
           NORMALIZED_RECIPES[normKey] = enrichedFb;
           completeSynthesisSuccess(midX, midY, enrichedFb, false, [itemA.name, itemB.name]);
           return;
@@ -1790,8 +1384,8 @@
         puffEl.remove();
 
         if (aiResult && aiResult.name) {
-          const responseText = aiResult.name === "NO_REACTION"
-            ? `${itemA.name} + ${itemB.name}: Anlamlı bir sonuç bulunamadı.`
+          const responseText = aiResult.name === "NO_REACTION" 
+            ? `${itemA.name} + ${itemB.name}: Anlamlı bir sonuç bulunamadı.` 
             : `${itemA.name} + ${itemB.name}: ${aiResult.emoji || "✨"} ${aiResult.name}`;
           const responsePanel = document.getElementById("aiResponsePanel");
           const responseContent = document.getElementById("aiResponseText");
@@ -1801,10 +1395,7 @@
 
         if (aiResult && aiResult.name && aiResult.name !== "NO_REACTION") {
           const enrichedAi = {
-            name: aiResult.name,
-            emoji: aiResult.emoji || "✨",
-            cat: aiResult.cat || "madde",
-            formula: recipeFormulaString
+            name: aiResult.name, emoji: aiResult.emoji || "✨", cat: aiResult.cat || "madde", formula: recipeFormulaString
           };
           NORMALIZED_RECIPES[normKey] = enrichedAi;
           ELEMENT_FORMULA_MAP[enrichedAi.name.toLocaleLowerCase("tr-TR")] = enrichedAi.formula;
@@ -1816,87 +1407,57 @@
           saveRecipeToFirebase(normKey, { name: "NO_REACTION" });
           showToast(`"${itemA.name}" + "${itemB.name}" anlamlı bir bileşik oluşturmadı.`, "warn");
           playSound("fail");
-          spawnElementOnCanvas(itemA, midX - 42, midY);
-          spawnElementOnCanvas(itemB, midX + 42, midY);
+          spawnElementOnCanvas(itemA, midX - 42, midY); spawnElementOnCanvas(itemB, midX + 42, midY);
         }
       } catch (err) {
         puffEl.remove();
         showToast("Bağlantı hatası oluştu, elementler geri bırakıldı.", "warn");
-        spawnElementOnCanvas(itemA, midX - 42, midY);
-        spawnElementOnCanvas(itemB, midX + 42, midY);
+        spawnElementOnCanvas(itemA, midX - 42, midY); spawnElementOnCanvas(itemB, midX + 42, midY);
       }
     }
 
     function completeSynthesisSuccess(x, y, resultItem, isAiDiscovery, sourceNames = []) {
       const formulaText = resultItem.formula || getElementFormulaText(resultItem);
-      const finalItem = {
-        ...resultItem,
-        formula: formulaText
-      };
-
+      const finalItem = { ...resultItem, formula: formulaText };
       ELEMENT_FORMULA_MAP[finalItem.name.toLocaleLowerCase("tr-TR")] = formulaText;
       const sourceText = sourceNames.length ? `${sourceNames.join(" + ")} → ` : "";
       logSharedActivity(`Sentez: ${sourceText}${finalItem.name}${isAiDiscovery ? " (yapay zekâ)" : ""}.`);
 
       const isNew = !inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === finalItem.name.toLocaleLowerCase("tr-TR"));
       if (isNew) {
-        inventory.unshift(finalItem);
-        renderInventory();
-        showToast(
-          `🎉 Yeni Keşif: ${finalItem.emoji || "🧪"} ${finalItem.name} (${formulaText})`,
-          isAiDiscovery ? "ai" : "new"
-        );
-        // Görev kontrolü - keşif bildiriminden kısa süre sonra
+        inventory.unshift(finalItem); renderInventory();
+        showToast(`🎉 Yeni Keşif: ${finalItem.emoji || "🧪"} ${finalItem.name} (${formulaText})`, isAiDiscovery ? "ai" : "new");
         setTimeout(() => checkMissionProgress(finalItem.name), 450);
       }
-
       const spawned = spawnElementOnCanvas(finalItem, x, y);
-      if (spawned) {
-        triggerVfxBurst(spawned.x, spawned.y, spawned.profile);
-      }
+      if (spawned) triggerVfxBurst(spawned.x, spawned.y, spawned.profile);
       saveProgressToLocal();
     }
 
     /* =========================================================================
-       8. FIREBASE VE GEMINI API İŞLEMLERİ
+       8. FIREBASE VE YAPAY ZEKÂ (DETAYLI LOGLAMALI)
        ========================================================================= */
     async function fetchRecipeFromFirebase(key) {
       try {
-        const url = `${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`;
-        const res = await fetch(url);
+        const res = await fetch(`${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`);
         if (!res.ok) return null;
         const data = await res.json();
         if (!data) return null;
-        if (typeof data === "string") {
-          return { name: data, emoji: "🧪", cat: "madde" };
-        }
+        if (typeof data === "string") return { name: data, emoji: "🧪", cat: "madde" };
         return data;
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
     }
 
     async function saveRecipeToFirebase(key, payload) {
       try {
-        const url = `${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`;
-        await fetch(url, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+        await fetch(`${getFirebaseBaseUrl()}/recipes/${encodeURIComponent(key)}.json`, {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
         });
       } catch (e) {}
     }
 
-    const GROQ_MODEL_PRIORITY = [
-      "llama-3.3-70b-versatile",
-      "openai/gpt-oss-120b",
-      "llama-3.1-8b-instant"
-    ];
-    const GEMINI_MODEL_PRIORITY = [
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-flash",
-      "gemini-2.0-flash"
-    ];
+    const GROQ_MODEL_PRIORITY = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant"];
+    const GEMINI_MODEL_PRIORITY = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
     const RATE_LIMITED_UNTIL = {};
 
     function buildRecipePrompt(elem1, elem2) {
@@ -1915,67 +1476,48 @@ Kurallar:
       if (!text) return null;
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) return null;
-      try {
-        return JSON.parse(match[0]);
-      } catch (error) {
-        return null;
-      }
+      try { return JSON.parse(match[0]); } catch (error) { return null; }
     }
 
-    function isConfiguredApiKey(apiKey) {
-      return Boolean(apiKey && !apiKey.includes("__"));
-    }
+    function isConfiguredApiKey(apiKey) { return Boolean(apiKey && !apiKey.includes("__")); }
 
     async function askGroqForRecipe(prompt) {
       const apiKey = getGroqApiKey();
-      if (!isConfiguredApiKey(apiKey)) return null;
+      if (!isConfiguredApiKey(apiKey)) {
+        await logSharedActivity("⚠️ Groq atlandı: Geçerli bir API anahtarı bulunamadı.");
+        return null;
+      }
 
       for (const model of GROQ_MODEL_PRIORITY) {
         const cacheKey = `groq:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        const requestPayload = {
-          model,
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.3,
-          max_tokens: 150
-        };
-        const requestDetails = {
-          method: "POST",
-          endpoint: "/openai/v1/chat/completions",
-          headers: { Authorization: "Bearer [REDACTED]", "Content-Type": "application/json" },
-          body: requestPayload
-        };
-
+        const reqPayload = { model, messages: [{ role: "user", content: prompt }], temperature: 0.3, max_tokens: 150 };
         try {
-          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify(requestPayload)
+            body: JSON.stringify(reqPayload)
           });
-          const responseBody = await response.text();
-          let data = null;
-          try {
-            data = JSON.parse(responseBody);
-          } catch (error) {}
+          const resBody = await res.text();
+          let data = null; try { data = JSON.parse(resBody); } catch (e) {}
+          
+          const logDetail = {
+            provider: "Groq",
+            model: model,
+            status: res.status,
+            prompt: prompt,
+            raw_response: resBody
+          };
+          await logSharedActivity(`🤖 Groq Denemesi: ${model} (HTTP ${res.status})`, JSON.stringify(logDetail, null, 2));
 
-          await logSharedActivity(
-            `Groq istek/yanıt kaydı (${model}, HTTP ${response.status}).`,
-            JSON.stringify({ request: requestDetails, response: responseBody }, null, 2)
-          );
-          if (response.status === 429) {
-            RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000;
-            continue;
-          }
-          if (!response.ok) continue;
+          if (res.status === 429) { RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000; continue; }
+          if (!res.ok) continue;
 
           const result = extractRecipeJson(data?.choices?.[0]?.message?.content || "");
           if (result?.name) return result;
         } catch (error) {
-          await logSharedActivity(
-            `Groq isteği başarısız oldu (${model}).`,
-            JSON.stringify({ request: requestDetails, error: String(error) }, null, 2)
-          );
+          await logSharedActivity(`❌ Groq Hatası: ${model}`, String(error));
         }
       }
       return null;
@@ -1983,53 +1525,40 @@ Kurallar:
 
     async function askGeminiForRecipe(prompt) {
       const apiKey = getGeminiApiKey();
-      if (!isConfiguredApiKey(apiKey)) return null;
+      if (!isConfiguredApiKey(apiKey)) {
+        await logSharedActivity("⚠️ Gemini atlandı: Geçerli bir API anahtarı bulunamadı.");
+        return null;
+      }
 
       for (const model of GEMINI_MODEL_PRIORITY) {
         const cacheKey = `gemini:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        const requestPayload = {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 150 }
-        };
-        const requestDetails = {
-          method: "POST",
-          endpoint: `/v1beta/models/${model}:generateContent`,
-          headers: { "Content-Type": "application/json" },
-          body: requestPayload
-        };
-
+        const reqPayload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 150 } };
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-          const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestPayload)
+          const res = await fetch(url, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reqPayload)
           });
-          const responseBody = await response.text();
-          let data = null;
-          try {
-            data = JSON.parse(responseBody);
-          } catch (error) {}
+          const resBody = await res.text();
+          let data = null; try { data = JSON.parse(resBody); } catch (e) {}
 
-          await logSharedActivity(
-            `Gemini istek/yanıt kaydı (${model}, HTTP ${response.status}).`,
-            JSON.stringify({ request: requestDetails, response: responseBody }, null, 2)
-          );
-          if (response.status === 429) {
-            RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000;
-            continue;
-          }
-          if (!response.ok) continue;
+          const logDetail = {
+            provider: "Gemini",
+            model: model,
+            status: res.status,
+            prompt: prompt,
+            raw_response: resBody
+          };
+          await logSharedActivity(`🤖 Gemini Denemesi: ${model} (HTTP ${res.status})`, JSON.stringify(logDetail, null, 2));
+
+          if (res.status === 429) { RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000; continue; }
+          if (!res.ok) continue;
 
           const result = extractRecipeJson(data?.candidates?.[0]?.content?.parts?.[0]?.text || "");
           if (result?.name) return result;
         } catch (error) {
-          await logSharedActivity(
-            `Gemini isteği başarısız oldu (${model}).`,
-            JSON.stringify({ request: requestDetails, error: String(error) }, null, 2)
-          );
+          await logSharedActivity(`❌ Gemini Hatası: ${model}`, String(error));
         }
       }
       return null;
@@ -2037,9 +1566,16 @@ Kurallar:
 
     async function askAIForRecipe(elem1, elem2) {
       const prompt = buildRecipePrompt(elem1, elem2);
+      
+      // 1. Groq Dene
       const groqResult = await askGroqForRecipe(prompt);
       if (groqResult) return groqResult;
-      return askGeminiForRecipe(prompt);
+
+      // 2. Gemini Dene
+      const geminiResult = await askGeminiForRecipe(prompt);
+      if (geminiResult) return geminiResult;
+
+      return null;
     }
 
     async function refreshGlobalFormulaCount() {
@@ -2050,8 +1586,7 @@ Kurallar:
         if (res.ok) {
           const data = await res.json();
           const cloudCount = data ? Object.keys(data).length : 0;
-          const total = Math.max(localCount, cloudCount + STARTER_ELEMENTS.length);
-          badge.textContent = `${total}+`;
+          badge.textContent = `${Math.max(localCount, cloudCount + STARTER_ELEMENTS.length)}+`;
           return;
         }
       } catch (e) {}
@@ -2063,60 +1598,37 @@ Kurallar:
       const status = document.getElementById("syncStatusText");
       btn.disabled = true;
       status.textContent = "⏳ Formüller Firebase'e yükleniyor...";
-
       try {
         const payload = {};
-        for (const [k, v] of Object.entries(NORMALIZED_RECIPES)) {
-          payload[k] = v;
-        }
+        for (const [k, v] of Object.entries(NORMALIZED_RECIPES)) payload[k] = v;
         const res = await fetch(`${getFirebaseBaseUrl()}/recipes.json`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
         });
-        if (res.ok) {
-          status.textContent = `✅ Başarılı! ${Object.keys(payload).length} formül buluta eşitlendi.`;
-          refreshGlobalFormulaCount();
-        } else {
-          status.textContent = "⚠️ Firebase yazma izni hatası (Rules kontrol edin).";
-        }
-      } catch (e) {
-        status.textContent = "⚠️ Bağlantı hatası oluştu.";
-      } finally {
-        btn.disabled = false;
-      }
+        if (res.ok) { status.textContent = `✅ Başarılı! ${Object.keys(payload).length} formül eşitlendi.`; refreshGlobalFormulaCount(); }
+        else status.textContent = "⚠️ Firebase yazma izni hatası (Rules kontrol edin).";
+      } catch (e) { status.textContent = "⚠️ Bağlantı hatası."; }
+      finally { btn.disabled = false; }
     }
 
     /* =========================================================================
-       9. İPUCU SİSTEMİ, CİHAZ MODU VE MODALLAR
+       9. İPUCU, MODAL, CİHAZ
        ========================================================================= */
     function showRecipeHint() {
       const invNames = new Set(inventory.map(i => i.name.toLocaleLowerCase("tr-TR")));
       const candidates = [];
-
       for (const [rawKey, result] of Object.entries(MASTER_RECIPES)) {
         const parts = rawKey.split("_");
         if (parts.length !== 2) continue;
         const p1 = parts[0].trim().toLocaleLowerCase("tr-TR");
         const p2 = parts[1].trim().toLocaleLowerCase("tr-TR");
-        const resLower = result.name.toLocaleLowerCase("tr-TR");
-
-        if (invNames.has(p1) && invNames.has(p2) && !invNames.has(resLower)) {
-          candidates.push({
-            a: formatTitleCase(p1),
-            b: formatTitleCase(p2),
-            target: result.name,
-            emoji: result.emoji
-          });
+        if (invNames.has(p1) && invNames.has(p2) && !invNames.has(result.name.toLocaleLowerCase("tr-TR"))) {
+          candidates.push({ a: formatTitleCase(p1), b: formatTitleCase(p2), emoji: result.emoji });
         }
       }
-
       if (candidates.length > 0) {
         const pick = candidates[Math.floor(Math.random() * candidates.length)];
         showToast(`💡 İpucu: "${pick.a}" + "${pick.b}" birleştirirsen ${pick.emoji} ??? oluşur!`, "hint");
-      } else {
-        showToast("💡 İpucu: İki elementi üst üste sürükleyerek yeni teknolojiler sentezle!", "hint");
-      }
+      } else showToast("💡 İpucu: İki elementi üst üste sürükleyerek yeni teknolojiler sentezle!", "hint");
     }
 
     function showToast(msg, type = "info") {
@@ -2129,47 +1641,31 @@ Kurallar:
       if (type === "warn") style = "bg-rose-950/95 border-rose-500/70 text-rose-200";
       if (type === "hint") style = "bg-amber-950/95 border-amber-400 text-amber-100";
       if (type === "mission") style = "bg-emerald-700 border-emerald-300 text-white shadow-emerald-500/50";
-
       el.className = `px-4 py-2 rounded-2xl border-2 text-xs sm:text-sm font-bold shadow-2xl transition-all duration-300 ${style}`;
       el.textContent = msg;
       container.appendChild(el);
-
-      setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateY(-8px)";
-        setTimeout(() => el.remove(), 300);
-      }, 3400);
+      setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(-8px)"; setTimeout(() => el.remove(), 300); }, 3400);
     }
 
     function applyDeviceModeUI(mode) {
-      deviceMode = mode;
-      localStorage.setItem("alchemy_device_mode", mode);
+      deviceMode = mode; localStorage.setItem("alchemy_device_mode", mode);
       const sidebar = document.getElementById("sidebarPanel");
       const quickBtn = document.getElementById("mobileQuickAddBtn");
       const icon = document.getElementById("deviceModeIcon");
       const label = document.getElementById("deviceModeLabel");
-
       if (mode === "mobile") {
-        sidebar.classList.add("hidden");
-        sidebar.classList.remove("md:flex");
-        quickBtn.classList.remove("md:hidden");
-        icon.textContent = "📱";
-        label.textContent = "Mobil";
+        sidebar.classList.add("hidden"); sidebar.classList.remove("md:flex");
+        quickBtn.classList.remove("md:hidden"); icon.textContent = "📱"; label.textContent = "Mobil";
       } else {
-        sidebar.classList.remove("hidden");
-        sidebar.classList.add("md:flex");
-        quickBtn.classList.add("md:hidden");
-        icon.textContent = "💻";
-        label.textContent = "PC";
+        sidebar.classList.remove("hidden"); sidebar.classList.add("md:flex");
+        quickBtn.classList.add("md:hidden"); icon.textContent = "💻"; label.textContent = "PC";
       }
-
       setTimeout(reclampAllCanvasItems, 60);
     }
 
     function selectDeviceMode(mode) {
       const modal = document.getElementById("deviceModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
+      modal.classList.add("hidden"); modal.classList.remove("flex");
       applyDeviceModeUI(mode);
     }
 
@@ -2181,35 +1677,33 @@ Kurallar:
 
     function reclampAllCanvasItems() {
       canvasItems.forEach(item => {
-        const clamped = clampCanvasPosition(item.x, item.y);
-        item.x = clamped.x;
-        item.y = clamped.y;
-        item.el.style.left = `${clamped.x}px`;
-        item.el.style.top = `${clamped.y}px`;
+        const c = clampCanvasPosition(item.x, item.y);
+        item.x = c.x; item.y = c.y;
+        item.el.style.left = `${c.x}px`; item.el.style.top = `${c.y}px`;
       });
     }
 
     function openSettingsModal() {
       document.getElementById("cfgFirebaseUrl").value = getFirebaseBaseUrl();
       document.getElementById("cfgGeminiKey").value = getGeminiApiKey();
-      const modal = document.getElementById("settingsModal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
+      document.getElementById("cfgGroqKey").value = getGroqApiKey();
+      const m = document.getElementById("settingsModal");
+      m.classList.remove("hidden"); m.classList.add("flex");
     }
-
+    
     function closeSettingsModal() {
-      const modal = document.getElementById("settingsModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
+      const m = document.getElementById("settingsModal");
+      m.classList.add("hidden"); m.classList.remove("flex");
     }
-
+    
     function saveSettingsFromModal() {
       const fb = document.getElementById("cfgFirebaseUrl").value.trim();
-      const key = document.getElementById("cfgGeminiKey").value.trim();
+      const gk = document.getElementById("cfgGeminiKey").value.trim();
+      const gr = document.getElementById("cfgGroqKey").value.trim();
       if (fb) localStorage.setItem("alchemy_fb_url", fb);
-      if (key) localStorage.setItem("alchemy_gemini_key", key);
-      closeSettingsModal();
-      refreshGlobalFormulaCount();
+      if (gk) localStorage.setItem("alchemy_gemini_key", gk);
+      if (gr) localStorage.setItem("alchemy_groq_key", gr);
+      closeSettingsModal(); refreshGlobalFormulaCount();
       showToast("Ayarlar kaydedildi.");
     }
 
@@ -2218,18 +1712,15 @@ Kurallar:
       localStorage.removeItem("alchemy_canvas_v3");
       localStorage.removeItem("alchemy_missions_v1");
       logSharedActivity("Oyuncu ilerlemesini sıfırladı.");
-      clearCanvas();
-      inventory = [...STARTER_ELEMENTS];
+      clearCanvas(); inventory = [...STARTER_ELEMENTS];
       missionProgress = { bio: 0, industry: 0, tech: 0 };
-      saveMissionProgress();
-      renderInventory();
-      renderMissionPanel();
+      saveMissionProgress(); renderInventory(); renderMissionPanel();
       closeSettingsModal();
-      showToast("Tüm ilerleme sıfırlandı ve başlangıç elementlerine dönüldü.");
+      showToast("Tüm ilerleme sıfırlandı.");
     }
 
     /* =========================================================================
-       10. BAŞLATMA (INIT)
+       10. BAŞLATMA
        ========================================================================= */
     window.addEventListener("resize", reclampAllCanvasItems);
 
@@ -2244,23 +1735,15 @@ Kurallar:
       try {
         const savedCanvas = JSON.parse(localStorage.getItem("alchemy_canvas_v3") || "[]");
         if (Array.isArray(savedCanvas) && savedCanvas.length > 0) {
-          savedCanvas.forEach(entry => {
-            if (entry && entry.data) {
-              spawnElementOnCanvas(entry.data, entry.x || 180, entry.y || 180, true);
-            }
-          });
+          savedCanvas.forEach(entry => { if (entry && entry.data) spawnElementOnCanvas(entry.data, entry.x || 180, entry.y || 180, true); });
         }
       } catch (e) {}
 
       if (!deviceMode) {
-        const devModal = document.getElementById("deviceModal");
-        devModal.classList.remove("hidden");
-        devModal.classList.add("flex");
-        const autoMode = window.innerWidth < 768 ? "mobile" : "pc";
-        applyDeviceModeUI(autoMode);
-      } else {
-        applyDeviceModeUI(deviceMode);
-      }
+        const dm = document.getElementById("deviceModal");
+        dm.classList.remove("hidden"); dm.classList.add("flex");
+        applyDeviceModeUI(window.innerWidth < 768 ? "mobile" : "pc");
+      } else applyDeviceModeUI(deviceMode);
     });
   </script>
 </body>
