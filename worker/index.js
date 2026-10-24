@@ -1,18 +1,24 @@
 const GROQ_MODELS = new Set([
   "openai/gpt-oss-120b",
-  "llama3-70b-8192",
-  "llama3-8b-8192"
+  "openai/gpt-oss-20b",
+  "qwen/qwen3.8-27b"
 ]);
 
 const GEMINI_MODELS = new Set([
-  "gemini-3.1-flash-lite",
   "gemini-3.5-flash-lite",
-  "gemini-2.5-flash",
-  "gemini-2.0-flash"
+  "gemini-3.1-flash-lite"
 ]);
 
 const MAX_REQUEST_BYTES = 16 * 1024;
 const MAX_PROMPT_LENGTH = 8000;
+const MAX_MESSAGES = 20;
+
+function isValidMessages(messages, allowedRoles) {
+  return Array.isArray(messages) && messages.length > 0 && messages.length <= MAX_MESSAGES &&
+    messages.every(message => allowedRoles.includes(message?.role) &&
+      typeof message?.content === "string" && message.content.length > 0) &&
+    messages.reduce((total, message) => total + message.content.length, 0) <= MAX_PROMPT_LENGTH;
+}
 
 function jsonResponse(body, status, headers) {
   return new Response(JSON.stringify(body), {
@@ -82,13 +88,11 @@ export default {
     }
 
     let upstreamUrl;
-    let upstreamHeaders = { "Content-Type": "application/json" };
+    const upstreamHeaders = { "Content-Type": "application/json" };
     let upstreamBody;
 
     if (route.provider === "groq") {
-      const prompt = body?.messages?.[0]?.content;
-      if (!GROQ_MODELS.has(body?.model) || body?.messages?.length !== 1 || body.messages[0]?.role !== "user" ||
-          typeof prompt !== "string" || prompt.length > MAX_PROMPT_LENGTH) {
+      if (!GROQ_MODELS.has(body?.model) || !isValidMessages(body?.messages, ["system", "user", "assistant"])) {
         return jsonResponse({ error: "Invalid Groq request" }, 400, corsHeaders);
       }
       if (!env.GROQ_API_KEY) {
@@ -99,23 +103,28 @@ export default {
       upstreamHeaders.Authorization = `Bearer ${env.GROQ_API_KEY}`;
       upstreamBody = {
         model: body.model,
-        messages: [{ role: "user", content: prompt }],
+        messages: body.messages,
         temperature: 0.3,
-        max_tokens: 500
+        max_completion_tokens: 500
       };
     } else {
-      const prompt = body?.contents?.[0]?.parts?.[0]?.text;
-      if (!GEMINI_MODELS.has(route.model) || body?.contents?.length !== 1 ||
-          body.contents[0]?.parts?.length !== 1 || typeof prompt !== "string" || prompt.length > MAX_PROMPT_LENGTH) {
+      const contents = body?.contents;
+      const validContents = Array.isArray(contents) && contents.length > 0 && contents.length <= MAX_MESSAGES &&
+        contents.every(content => (!content?.role || ["user", "model"].includes(content.role)) &&
+          Array.isArray(content?.parts) && content.parts.length === 1 &&
+          typeof content.parts[0]?.text === "string" && content.parts[0].text.length > 0) &&
+        contents.reduce((total, content) => total + content.parts[0].text.length, 0) <= MAX_PROMPT_LENGTH;
+      if (!GEMINI_MODELS.has(route.model) || !validContents) {
         return jsonResponse({ error: "Invalid Gemini request" }, 400, corsHeaders);
       }
       if (!env.GEMINI_API_KEY) {
         return jsonResponse({ error: "Gemini is not configured" }, 503, corsHeaders);
       }
 
-      upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(route.model)}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+      upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(route.model)}:generateContent`;
+      upstreamHeaders["x-goog-api-key"] = env.GEMINI_API_KEY;
       upstreamBody = {
-        contents: [{ parts: [{ text: prompt }] }],
+        contents,
         generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
       };
     }
@@ -124,8 +133,7 @@ export default {
       const upstream = await fetch(upstreamUrl, {
         method: "POST",
         headers: upstreamHeaders,
-        body: JSON.stringify(upstreamBody),
-        redirect: "error"
+        body: JSON.stringify(upstreamBody)
       });
       return new Response(upstream.body, {
         status: upstream.status,
@@ -136,7 +144,9 @@ export default {
         }
       });
     } catch (error) {
-      return jsonResponse({ error: "AI provider request failed" }, 502, corsHeaders);
+      const details = error instanceof Error ? error.message : String(error);
+      console.error("AI provider request failed", { provider: route.provider, error: details });
+      return jsonResponse({ error: "AI provider request failed", details }, 502, corsHeaders);
     }
   }
 };
