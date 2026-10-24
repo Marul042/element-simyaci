@@ -120,7 +120,7 @@
   <!-- 1. ÜST BAR (BAŞLIK, SAYAÇLAR VE GENEL AYARLAR) -->
   <header class="w-full bg-slate-900/95 border-b border-slate-800 px-2.5 sm:px-4 py-2 flex items-center justify-between gap-2 z-30 shrink-0">
     <!-- Sol: Logo ve Başlık -->
-    <div class="flex items-center gap-2 min-w-0">
+    <button id="activityLogTrigger" type="button" onpointerdown="startActivityLogHold(event)" onpointerup="cancelActivityLogHold()" onpointerleave="cancelActivityLogHold()" onpointercancel="cancelActivityLogHold()" oncontextmenu="return false" class="flex items-center gap-2 min-w-0 text-left select-none touch-manipulation" title="Son işlemler için basılı tut" aria-label="Element Avcısı, son işlemleri açmak için basılı tut">
       <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
         <span class="text-base sm:text-lg">⚗️</span>
       </div>
@@ -128,7 +128,7 @@
         <h1 class="text-xs sm:text-base font-extrabold tracking-tight text-white truncate">Element Simyacısı</h1>
         <p class="text-[10px] text-slate-400 hidden sm:block truncate">Atomlardan Teknolojiye Sentez Laboratuvarı</p>
       </div>
-    </div>
+    </button>
 
     <!-- Orta: Canlı Sistem Üretimi & Keşif Sayaçları -->
     <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -406,6 +406,31 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL: PAROLA KORUMALI ORTAK İŞLEM GEÇMİŞİ -->
+  <div id="activityLogModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-extrabold text-white">Son İşlemler</h2>
+          <p class="text-[11px] text-slate-400">Ortak oyun etkinlikleri</p>
+        </div>
+        <button type="button" onclick="closeActivityLogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" aria-label="Kapat">✕</button>
+      </div>
+
+      <form id="activityPasswordView" onsubmit="unlockActivityLog(event)" class="p-4 space-y-3">
+        <label for="activityLogPassword" class="block text-xs font-semibold text-slate-300">Geçmişi görüntülemek için parola</label>
+        <input id="activityLogPassword" type="password" autocomplete="current-password" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+        <p id="activityPasswordError" class="hidden text-xs text-rose-300">Parola yanlış.</p>
+        <button type="submit" class="w-full rounded-lg bg-cyan-500 hover:bg-cyan-400 px-3 py-2 text-sm font-bold text-slate-950">Görüntüle</button>
+      </form>
+
+      <section id="activityLogContentView" class="hidden min-h-0 flex-1 flex flex-col">
+        <p id="activityLogStatus" class="px-4 py-2 text-xs text-slate-400"></p>
+        <ol id="activityLogList" class="min-h-0 flex-1 overflow-y-auto divide-y divide-slate-800 px-4"></ol>
+      </section>
     </div>
   </div>
 
@@ -835,6 +860,10 @@
     let nextCanvasId = 1;
     let missionProgress = { bio: 0, industry: 0, tech: 0 };
     let missionExpanded = false;
+    let activityLogHoldTimer = null;
+    let activityLogRefreshTimer = null;
+    const ACTIVITY_LOG_PASSWORD = "Marul";
+    const ACTIVITY_LOG_LIMIT = 50;
 
     function getFirebaseBaseUrl() {
       return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, "");
@@ -842,6 +871,149 @@
 
     function getGeminiApiKey() {
       return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim();
+    }
+
+    function startActivityLogHold(event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      cancelActivityLogHold();
+      activityLogHoldTimer = window.setTimeout(() => {
+        activityLogHoldTimer = null;
+        openActivityLogModal();
+      }, 700);
+    }
+
+    function cancelActivityLogHold() {
+      if (activityLogHoldTimer) {
+        clearTimeout(activityLogHoldTimer);
+        activityLogHoldTimer = null;
+      }
+    }
+
+    function openActivityLogModal() {
+      const modal = document.getElementById("activityLogModal");
+      document.getElementById("activityPasswordView").classList.remove("hidden");
+      document.getElementById("activityLogContentView").classList.add("hidden");
+      document.getElementById("activityPasswordError").classList.add("hidden");
+      document.getElementById("activityLogPassword").value = "";
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.getElementById("activityLogPassword").focus();
+    }
+
+    function closeActivityLogModal() {
+      if (activityLogRefreshTimer) {
+        clearInterval(activityLogRefreshTimer);
+        activityLogRefreshTimer = null;
+      }
+      const modal = document.getElementById("activityLogModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    async function unlockActivityLog(event) {
+      event.preventDefault();
+      const passwordInput = document.getElementById("activityLogPassword");
+      if (passwordInput.value !== ACTIVITY_LOG_PASSWORD) {
+        document.getElementById("activityPasswordError").classList.remove("hidden");
+        passwordInput.select();
+        return;
+      }
+
+      document.getElementById("activityPasswordView").classList.add("hidden");
+      document.getElementById("activityLogContentView").classList.remove("hidden");
+      document.getElementById("activityLogStatus").textContent = "Son işlemler yükleniyor...";
+      await loadSharedActivity();
+      if (activityLogRefreshTimer) clearInterval(activityLogRefreshTimer);
+      activityLogRefreshTimer = window.setInterval(loadSharedActivity, 10000);
+    }
+
+    function getActivityBrowserName() {
+      const userAgent = navigator.userAgent;
+      if (/Edg\//.test(userAgent)) return "Edge";
+      if (/OPR\//.test(userAgent)) return "Opera";
+      if (/Chrome\//.test(userAgent)) return "Chrome";
+      if (/Firefox\//.test(userAgent)) return "Firefox";
+      if (/Safari\//.test(userAgent)) return "Safari";
+      return "Diğer tarayıcı";
+    }
+
+    function getActivityVisitorId() {
+      const storageKey = "alchemy_activity_visitor_id";
+      try {
+        let visitorId = localStorage.getItem(storageKey);
+        if (!visitorId) {
+          const randomId = window.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+          visitorId = randomId.replace(/-/g, "").slice(0, 6).toUpperCase();
+          localStorage.setItem(storageKey, visitorId);
+        }
+        return visitorId;
+      } catch (error) {
+        return Math.random().toString(36).slice(2, 8).toUpperCase();
+      }
+    }
+
+    async function logSharedActivity(description) {
+      try {
+        const response = await fetch(`${getFirebaseBaseUrl()}/activity.json`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            actor: `${getActivityBrowserName()} · Ziyaretçi ${getActivityVisitorId()}`,
+            description: String(description).slice(0, 180),
+            timestamp: Date.now()
+          })
+        });
+        if (!response.ok) throw new Error("Activity write failed");
+      } catch (error) {
+        const status = document.getElementById("activityLogStatus");
+        if (status && !document.getElementById("activityLogContentView").classList.contains("hidden")) {
+          status.textContent = "İşlem kaydedilemedi. Firebase okuma/yazma kurallarını kontrol edin.";
+        }
+      }
+    }
+
+    async function loadSharedActivity() {
+      const status = document.getElementById("activityLogStatus");
+      const list = document.getElementById("activityLogList");
+      try {
+        const url = `${getFirebaseBaseUrl()}/activity.json?orderBy=%22$key%22&limitToLast=${ACTIVITY_LOG_LIMIT}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Activity read failed");
+        const data = await response.json();
+        const entries = Object.values(data || {})
+          .filter(entry => entry && typeof entry === "object")
+          .sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
+
+        list.replaceChildren();
+        if (entries.length === 0) {
+          status.textContent = "Henüz ortak bir işlem kaydı yok.";
+          return;
+        }
+
+        status.textContent = `Son ${entries.length} işlem`;
+        entries.forEach(entry => {
+          const row = document.createElement("li");
+          row.className = "py-3";
+          const actor = document.createElement("p");
+          actor.className = "text-[11px] font-semibold text-cyan-300";
+          actor.textContent = entry.actor || "Anonim ziyaretçi";
+          const description = document.createElement("p");
+          description.className = "mt-0.5 break-words text-sm text-slate-200";
+          description.textContent = entry.description || "İşlem";
+          const time = document.createElement("time");
+          time.className = "mt-1 block text-[10px] text-slate-500";
+          const timestamp = Number(entry.timestamp);
+          time.dateTime = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : "";
+          time.textContent = Number.isFinite(timestamp)
+            ? new Date(timestamp).toLocaleString("tr-TR")
+            : "Tarih bilinmiyor";
+          row.append(actor, description, time);
+          list.appendChild(row);
+        });
+      } catch (error) {
+        list.replaceChildren();
+        status.textContent = "Ortak geçmiş yüklenemedi. Firebase okuma iznini ve bağlantıyı kontrol edin.";
+      }
     }
 
     function saveProgressToLocal() {
@@ -1247,7 +1419,9 @@
       const rect = canvas.getBoundingClientRect();
       const jitterX = (Math.random() - 0.5) * 120;
       const jitterY = (Math.random() - 0.5) * 90;
-      return spawnElementOnCanvas(itemData, rect.width / 2 + jitterX, rect.height / 2 + jitterY);
+      const spawned = spawnElementOnCanvas(itemData, rect.width / 2 + jitterX, rect.height / 2 + jitterY);
+      if (spawned) logSharedActivity(`Tuvale ${itemData.name} eklendi.`);
+      return spawned;
     }
 
     function spawnElementOnCanvas(itemData, x, y, skipSave = false) {
@@ -1297,6 +1471,9 @@
     }
 
     function clearCanvas() {
+      if (canvasItems.length > 0) {
+        logSharedActivity(`Tuval temizlendi (${canvasItems.length} öğe).`);
+      }
       canvasItems.forEach(item => {
         if (item.el) item.el.remove();
       });
@@ -1312,6 +1489,7 @@
       const rect = canvas.getBoundingClientRect();
       const a = inventory[Math.floor(Math.random() * inventory.length)];
       const b = inventory[Math.floor(Math.random() * inventory.length)];
+      logSharedActivity(`Rastgele ikili tuvale eklendi: ${a.name} ve ${b.name}.`);
       spawnElementOnCanvas(a, rect.width / 2 - 65, rect.height / 2);
       spawnElementOnCanvas(b, rect.width / 2 + 65, rect.height / 2);
       playSound("spawn");
@@ -1374,6 +1552,7 @@
               const localX = upEv.clientX - rect.left;
               const localY = upEv.clientY - rect.top;
               const spawned = spawnElementOnCanvas(itemData, localX, localY);
+              if (spawned) logSharedActivity(`Tuvale ${itemData.name} eklendi.`);
               playSound("spawn");
               if (spawned) checkAndTriggerMerge(spawned);
             }
@@ -1403,7 +1582,8 @@
 
         const now = Date.now();
         if (now - lastTapTime < 280) {
-          spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
+          const clone = spawnElementOnCanvas(record.data, record.x + 28, record.y + 28);
+          if (clone) logSharedActivity(`${record.data.name} çoğaltıldı.`);
           playSound("spawn");
           lastTapTime = 0;
           return;
@@ -1471,6 +1651,7 @@
             upEv.clientY <= trashRect.bottom
           ) {
             playSound("trash");
+            logSharedActivity(`${record.data.name} tuvalden silindi.`);
             removeCanvasItem(record);
             return;
           }
@@ -1559,7 +1740,7 @@
           ...localMatch,
           formula: localMatch.formula || recipeFormulaString
         };
-        completeSynthesisSuccess(midX, midY, resultElement, false);
+        completeSynthesisSuccess(midX, midY, resultElement, false, [itemA.name, itemB.name]);
         return;
       }
 
@@ -1582,7 +1763,7 @@
             formula: fbResult.formula || recipeFormulaString
           };
           NORMALIZED_RECIPES[normKey] = enrichedFb;
-          completeSynthesisSuccess(midX, midY, enrichedFb, false);
+          completeSynthesisSuccess(midX, midY, enrichedFb, false, [itemA.name, itemB.name]);
           return;
         }
 
@@ -1610,7 +1791,7 @@
           NORMALIZED_RECIPES[normKey] = enrichedAi;
           ELEMENT_FORMULA_MAP[enrichedAi.name.toLocaleLowerCase("tr-TR")] = enrichedAi.formula;
           saveRecipeToFirebase(normKey, enrichedAi);
-          completeSynthesisSuccess(midX, midY, enrichedAi, true);
+          completeSynthesisSuccess(midX, midY, enrichedAi, true, [itemA.name, itemB.name]);
           refreshGlobalFormulaCount();
         } else {
           REACTION_CACHE[normKey] = "NO_REACTION";
@@ -1628,7 +1809,7 @@
       }
     }
 
-    function completeSynthesisSuccess(x, y, resultItem, isAiDiscovery) {
+    function completeSynthesisSuccess(x, y, resultItem, isAiDiscovery, sourceNames = []) {
       const formulaText = resultItem.formula || getElementFormulaText(resultItem);
       const finalItem = {
         ...resultItem,
@@ -1636,6 +1817,8 @@
       };
 
       ELEMENT_FORMULA_MAP[finalItem.name.toLocaleLowerCase("tr-TR")] = formulaText;
+      const sourceText = sourceNames.length ? `${sourceNames.join(" + ")} → ` : "";
+      logSharedActivity(`Sentez: ${sourceText}${finalItem.name}${isAiDiscovery ? " (yapay zekâ)" : ""}.`);
 
       const isNew = !inventory.some(i => i.name.toLocaleLowerCase("tr-TR") === finalItem.name.toLocaleLowerCase("tr-TR"));
       if (isNew) {
@@ -1899,6 +2082,7 @@ Kurallar:
       localStorage.removeItem("alchemy_inventory_v3");
       localStorage.removeItem("alchemy_canvas_v3");
       localStorage.removeItem("alchemy_missions_v1");
+      logSharedActivity("Oyuncu ilerlemesini sıfırladı.");
       clearCanvas();
       inventory = [...STARTER_ELEMENTS];
       missionProgress = { bio: 0, industry: 0, tech: 0 };
