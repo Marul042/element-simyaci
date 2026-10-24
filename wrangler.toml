@@ -1,0 +1,7 @@
+name = "element-simyaci-api"
+main = "worker/index.js"
+compatibility_date = "2026-10-24"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://marul042.github.io"

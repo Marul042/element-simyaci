@@ -372,14 +372,10 @@
       </div>
 
       <div class="space-y-3 text-xs">
+        <p class="text-amber-300">API anahtarları Cloudflare Worker'da saklanır; buraya yalnızca Worker URL'sini girin. Worker URL'si gizli değildir.</p>
         <div>
-          <label class="block text-slate-400 font-semibold mb-1">Groq API Anahtarı (Öncelikli - 1000 İstek/Gün)</label>
-          <input id="cfgGroqKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
-        </div>
-
-        <div>
-          <label class="block text-slate-400 font-semibold mb-1">Google Gemini API Anahtarı (Yedek - 500+ İstek/Gün)</label>
-          <input id="cfgGeminiKey" type="password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
+          <label class="block text-slate-400 font-semibold mb-1">Cloudflare Worker URL'si</label>
+          <input id="cfgAiProxyUrl" type="url" placeholder="https://element-simyaci-api.ornek.workers.dev" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono-code text-xs" />
         </div>
 
         <div>
@@ -419,7 +415,6 @@
           <p class="text-[11px] text-slate-400">Hangi sağlayıcı kullanıldı, istek ve yanıt neydi?</p>
         </div>
         <div class="flex items-center gap-2">
-          <!-- AYARLAR BUTONU BURAYA TAŞINDI -->
           <button onclick="closeActivityLogModal(); openSettingsModal();" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold transition flex items-center gap-1" title="Sistem Ayarları">
             ⚙️ Ayarlar
           </button>
@@ -446,8 +441,7 @@
        1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE
        ========================================================================= */
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
-    const DEFAULT_GEMINI_KEY = "__GEMINI_API_KEY__";
-    const DEFAULT_GROQ_KEY = "__GROQ_API_KEY__";
+    const DEFAULT_AI_PROXY_URL = "";
 
     const STARTER_ELEMENTS = [
       { name: "Hidrojen", emoji: "💧", cat: "element", formula: "H • Atom No: 1", desc: "Evrenin en hafif ve en bol elementi" },
@@ -757,8 +751,7 @@
     const LOCAL_ACTIVITY_KEY = "alchemy_local_activity";
 
     function getFirebaseBaseUrl() { return (localStorage.getItem("alchemy_fb_url") || DEFAULT_FIREBASE_URL).replace(/\/+$/, ""); }
-    function getGeminiApiKey() { return (localStorage.getItem("alchemy_gemini_key") || DEFAULT_GEMINI_KEY).trim(); }
-    function getGroqApiKey() { return (localStorage.getItem("alchemy_groq_key") || DEFAULT_GROQ_KEY || "").trim(); }
+    function getAiProxyUrl() { return (localStorage.getItem("alchemy_ai_proxy_url") || DEFAULT_AI_PROXY_URL).trim().replace(/\/+$/, ""); }
 
     function startActivityLogHold(event) {
       if (event.button !== undefined && event.button !== 0) return;
@@ -1491,7 +1484,7 @@
       } catch (e) {}
     }
 
-    // Groq'un silinen modelleri çıkarıldı. Çalışan güncel modeller eklendi.
+    // Güncel Groq Modelleri
     const GROQ_MODEL_PRIORITY = [
       "openai/gpt-oss-120b", 
       "llama3-70b-8192", 
@@ -1525,12 +1518,10 @@ Kurallar:
       try { return JSON.parse(match[0]); } catch (error) { return null; }
     }
 
-    function isConfiguredApiKey(apiKey) { return Boolean(apiKey && !apiKey.includes("__")); }
-
     async function askGroqForRecipe(prompt) {
-      const apiKey = getGroqApiKey();
-      if (!isConfiguredApiKey(apiKey)) {
-        await logSharedActivity("⚠️ Groq atlandı: Geçerli bir API anahtarı bulunamadı.");
+      const proxyUrl = getAiProxyUrl();
+      if (!proxyUrl) {
+        await logSharedActivity("⚠️ Groq atlandı: Cloudflare Worker URL'si ayarlanmamış.");
         return null;
       }
 
@@ -1538,24 +1529,17 @@ Kurallar:
         const cacheKey = `groq:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        // max_tokens 150'den 500'e çıkarıldı (JSON'un yarım kalmaması için)
         const reqPayload = { model, messages: [{ role: "user", content: prompt }], temperature: 0.3, max_tokens: 500 };
         try {
-          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          const res = await fetch(`${proxyUrl}/api/groq`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(reqPayload)
           });
           const resBody = await res.text();
           let data = null; try { data = JSON.parse(resBody); } catch (e) {}
           
-          const logDetail = {
-            provider: "Groq",
-            model: model,
-            status: res.status,
-            prompt: prompt,
-            raw_response: resBody
-          };
+          const logDetail = { provider: "Groq", model: model, status: res.status, prompt: prompt, raw_response: resBody };
           await logSharedActivity(`🤖 Groq Denemesi: ${model} (HTTP ${res.status})`, JSON.stringify(logDetail, null, 2));
 
           if (res.status === 429) { RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000; continue; }
@@ -1571,9 +1555,9 @@ Kurallar:
     }
 
     async function askGeminiForRecipe(prompt) {
-      const apiKey = getGeminiApiKey();
-      if (!isConfiguredApiKey(apiKey)) {
-        await logSharedActivity("⚠️ Gemini atlandı: Geçerli bir API anahtarı bulunamadı.");
+      const proxyUrl = getAiProxyUrl();
+      if (!proxyUrl) {
+        await logSharedActivity("⚠️ Gemini atlandı: Cloudflare Worker URL'si ayarlanmamış.");
         return null;
       }
 
@@ -1581,23 +1565,16 @@ Kurallar:
         const cacheKey = `gemini:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        // maxOutputTokens 150'den 500'e çıkarıldı
         const reqPayload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 500 } };
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const url = `${proxyUrl}/api/gemini/${encodeURIComponent(model)}`;
           const res = await fetch(url, {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reqPayload)
           });
           const resBody = await res.text();
           let data = null; try { data = JSON.parse(resBody); } catch (e) {}
 
-          const logDetail = {
-            provider: "Gemini",
-            model: model,
-            status: res.status,
-            prompt: prompt,
-            raw_response: resBody
-          };
+          const logDetail = { provider: "Gemini", model: model, status: res.status, prompt: prompt, raw_response: resBody };
           await logSharedActivity(`🤖 Gemini Denemesi: ${model} (HTTP ${res.status})`, JSON.stringify(logDetail, null, 2));
 
           if (res.status === 429) { RATE_LIMITED_UNTIL[cacheKey] = Date.now() + 60000; continue; }
@@ -1733,8 +1710,7 @@ Kurallar:
 
     function openSettingsModal() {
       document.getElementById("cfgFirebaseUrl").value = getFirebaseBaseUrl();
-      document.getElementById("cfgGeminiKey").value = getGeminiApiKey();
-      document.getElementById("cfgGroqKey").value = getGroqApiKey();
+      document.getElementById("cfgAiProxyUrl").value = getAiProxyUrl();
       const m = document.getElementById("settingsModal");
       m.classList.remove("hidden"); m.classList.add("flex");
     }
@@ -1746,11 +1722,24 @@ Kurallar:
     
     function saveSettingsFromModal() {
       const fb = document.getElementById("cfgFirebaseUrl").value.trim();
-      const gk = document.getElementById("cfgGeminiKey").value.trim();
-      const gr = document.getElementById("cfgGroqKey").value.trim();
+      const proxyInput = document.getElementById("cfgAiProxyUrl").value.trim();
+      let proxyUrl = "";
+      if (proxyInput) {
+        try {
+          const parsedProxyUrl = new URL(proxyInput);
+          if (parsedProxyUrl.protocol !== "https:" || parsedProxyUrl.username || parsedProxyUrl.password || parsedProxyUrl.search || parsedProxyUrl.hash) {
+            showToast("Worker URL'si HTTPS olmalı ve kullanıcı bilgisi, sorgu ya da parça içermemeli.");
+            return;
+          }
+          proxyUrl = parsedProxyUrl.href.replace(/\/+$/, "");
+        } catch (error) {
+          showToast("Geçerli bir Worker URL'si girin.");
+          return;
+        }
+      }
       if (fb) localStorage.setItem("alchemy_fb_url", fb);
-      if (gk) localStorage.setItem("alchemy_gemini_key", gk);
-      if (gr) localStorage.setItem("alchemy_groq_key", gr);
+      if (proxyUrl) localStorage.setItem("alchemy_ai_proxy_url", proxyUrl);
+      else localStorage.removeItem("alchemy_ai_proxy_url");
       closeSettingsModal(); refreshGlobalFormulaCount();
       showToast("Ayarlar kaydedildi.");
     }
