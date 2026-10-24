@@ -418,7 +418,13 @@
           <h2 class="text-sm font-extrabold text-white">Son İşlemler & Yapay Zekâ Günlüğü</h2>
           <p class="text-[11px] text-slate-400">Hangi sağlayıcı kullanıldı, istek ve yanıt neydi?</p>
         </div>
-        <button type="button" onclick="closeActivityLogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" aria-label="Kapat">✕</button>
+        <div class="flex items-center gap-2">
+          <!-- AYARLAR BUTONU BURAYA TAŞINDI -->
+          <button onclick="closeActivityLogModal(); openSettingsModal();" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold transition flex items-center gap-1" title="Sistem Ayarları">
+            ⚙️ Ayarlar
+          </button>
+          <button type="button" onclick="closeActivityLogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center" aria-label="Kapat">✕</button>
+        </div>
       </div>
 
       <form id="activityPasswordView" onsubmit="unlockActivityLog(event)" class="p-4 space-y-3">
@@ -437,7 +443,7 @@
 
   <script>
     /* =========================================================================
-       1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE (TÜM TARİFLER GERİ YÜKLENDİ)
+       1. BAŞLANGIÇ ELEMENTLERİ VE KÜTÜPHANE
        ========================================================================= */
     const DEFAULT_FIREBASE_URL = "https://element-oyunu-default-rtdb.firebaseio.com";
     const DEFAULT_GEMINI_KEY = "__GEMINI_API_KEY__";
@@ -1464,7 +1470,7 @@
     }
 
     /* =========================================================================
-       8. FIREBASE VE YAPAY ZEKÂ (DETAYLI LOGLAMALI)
+       8. FIREBASE VE YAPAY ZEKÂ (DÜZELTİLMİŞ GROQ VE TOKEN LİMİTLERİ)
        ========================================================================= */
     async function fetchRecipeFromFirebase(key) {
       try {
@@ -1485,8 +1491,19 @@
       } catch (e) {}
     }
 
-    const GROQ_MODEL_PRIORITY = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant"];
-    const GEMINI_MODEL_PRIORITY = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
+    // Groq'un silinen modelleri çıkarıldı. Çalışan güncel modeller eklendi.
+    const GROQ_MODEL_PRIORITY = [
+      "openai/gpt-oss-120b", 
+      "llama3-70b-8192", 
+      "llama3-8b-8192"
+    ];
+    
+    const GEMINI_MODEL_PRIORITY = [
+      "gemini-3.1-flash-lite", 
+      "gemini-3.5-flash-lite", 
+      "gemini-2.5-flash", 
+      "gemini-2.0-flash"
+    ];
     const RATE_LIMITED_UNTIL = {};
 
     function buildRecipePrompt(elem1, elem2) {
@@ -1521,7 +1538,8 @@ Kurallar:
         const cacheKey = `groq:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        const reqPayload = { model, messages: [{ role: "user", content: prompt }], temperature: 0.3, max_tokens: 150 };
+        // max_tokens 150'den 500'e çıkarıldı (JSON'un yarım kalmaması için)
+        const reqPayload = { model, messages: [{ role: "user", content: prompt }], temperature: 0.3, max_tokens: 500 };
         try {
           const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -1563,7 +1581,8 @@ Kurallar:
         const cacheKey = `gemini:${model}`;
         if ((RATE_LIMITED_UNTIL[cacheKey] || 0) > Date.now()) continue;
 
-        const reqPayload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 150 } };
+        // maxOutputTokens 150'den 500'e çıkarıldı
+        const reqPayload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 500 } };
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
           const res = await fetch(url, {
