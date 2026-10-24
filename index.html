@@ -873,7 +873,7 @@
       try { data = JSON.parse(responseText); }
       catch (error) { data = null; }
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}${responseText ? `: ${responseText.slice(0, 300)}` : ""}`);
+        throw new Error(`HTTP ${response.status}${responseText ? `: ${responseText}` : ""}`);
       }
       const answer = provider === "groq"
         ? data?.choices?.[0]?.message?.content
@@ -1621,8 +1621,8 @@
     ];
     
     const GEMINI_MODEL_PRIORITY = [
-      "gemini-3.5-flash-lite",
-      "gemini-3.1-flash-lite"
+      "gemini-3.8-flash",
+      "gemini-2.5-flash"
     ];
     for (const model of GROQ_MODEL_PRIORITY) {
       const option = document.createElement("option");
